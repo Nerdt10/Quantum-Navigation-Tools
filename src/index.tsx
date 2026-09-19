@@ -1,95 +1,213 @@
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/cloudflare-workers'
+import { landingPage, chatPage } from './pages'
+import { DECK } from './deck'
+import { buildSystemPrompt, type DrawnCard } from './prompt'
 
-const app = new Hono()
+type Bindings = {
+  OPENAI_API_KEY: string
+  OPENAI_BASE_URL: string
+  // Optional — only needed for the ElevenLabs upgrade path.
+  ELEVENLABS_API_KEY?: string
+  ELEVENLABS_VOICE_ID?: string
+}
+
+const app = new Hono<{ Bindings: Bindings }>()
 
 // Serve everything in public/ (styles, scripts, images, SFX, deck data).
-// public/static/app.js  → /static/app.js
-// public/static/assets/… → /static/assets/…
 app.use('/static/*', serveStatic({ root: './' }))
 
-const PAGE_TITLE = "Dr. Tashema — Quantum Developmental Tools"
+const MODEL = 'gpt-5-mini'
+const MAX_TURNS = 12 // how many prior messages we replay back to the model
+const MAX_CHARS_PER_TURN = 4000
 
-app.get('/', (c) => {
-  return c.html(`<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>${PAGE_TITLE}</title>
-<meta name="description" content="A quiet space where quantum insight meets soul remembrance — draw a free three-card reading from Dr. Tashema's Quantum Navigational Tools deck."/>
-  <meta name="theme-color" content="#f7f2e8"/>
-<link rel="icon" type="image/svg+xml" href="/static/favicon.svg"/>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300;1,9..144,400&family=Source+Serif+4:opsz,wght@8..60,400..700&family=Source+Sans+3:wght@400..700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/style.css"/>
-</head>
-<body>
+app.get('/', (c) => c.html(landingPage()))
+app.get('/chat', (c) => c.html(chatPage()))
 
-<div class="atmos"></div>
-<div class="atmos-wash"></div>
+app.get('/api/health', (c) =>
+  c.json({
+    ok: true,
+    model: MODEL,
+    deckCards: DECK.length,
+    llmConfigured: Boolean(c.env.OPENAI_API_KEY && c.env.OPENAI_BASE_URL),
+    ttsConfigured: Boolean(c.env.ELEVENLABS_API_KEY && c.env.ELEVENLABS_VOICE_ID),
+  }),
+)
 
-<div class="page">
+type ChatMessage = { role: 'user' | 'assistant'; content: string }
 
-  <!-- HERO -->
-  <section class="hero" id="hero">
-    <div class="hero-copy">
-      <div class="eyebrow">✦ Quantum Developmental Tools</div>
-      <h1>
-        <span class="welcome">Welcome to</span>
-        Dr. Tashema's Quantum Developmental Tools
-      </h1>
-      <p class="sub">
-        A quiet space where quantum insight meets soul remembrance —
-        practices, readings, and remembrances for those learning to move
-        through the field with intention.
-      </p>
-      <div class="cta-wrap">
-        <a href="#reading" class="cta" id="ctaBtn">
-          Get a Free Card Reading
-          <span class="arrow">↓</span>
-        </a>
-      </div>
-    </div>
+function sanitizeMessages(input: unknown): ChatMessage[] {
+  if (!Array.isArray(input)) return []
+  const out: ChatMessage[] = []
+  for (const m of input) {
+    if (!m || typeof m !== 'object') continue
+    const role = (m as any).role
+    const content = (m as any).content
+    if (role !== 'user' && role !== 'assistant') continue
+    if (typeof content !== 'string' || !content.trim()) continue
+    out.push({ role, content: content.slice(0, MAX_CHARS_PER_TURN) })
+  }
+  // Keep only the tail of the conversation, and make sure it starts with a
+  // user turn so the model never sees a leading assistant message.
+  const tail = out.slice(-MAX_TURNS)
+  while (tail.length && tail[0].role !== 'user') tail.shift()
+  return tail
+}
 
-    <div class="hero-deck" aria-hidden="true">
-      <div class="stack">
-        <div class="stack-card"><div class="art"></div></div>
-        <div class="stack-card"><div class="art"></div></div>
-        <div class="stack-card"><div class="art"></div></div>
-      </div>
-    </div>
+function sanitizeDrawn(input: unknown): DrawnCard[] {
+  if (!Array.isArray(input)) return []
+  const positions = ['Past', 'Present', 'Future']
+  return input
+    .slice(0, 3)
+    .map((d, i) => {
+      const n = Number((d as any)?.n)
+      if (!Number.isInteger(n) || n < 1 || n > 78) return null
+      return { position: positions[i] ?? 'Card', n }
+    })
+    .filter((d): d is DrawnCard => d !== null)
+}
 
-    <div class="scroll-hint">Scroll to receive</div>
-  </section>
+app.post('/api/chat', async (c) => {
+  const apiKey = c.env.OPENAI_API_KEY
+  const baseUrl = (c.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '')
 
-  <!-- READING -->
-  <section class="reading-section" id="reading">
-    <div class="reading-eyebrow">✦ Your Reading ✦</div>
-    <h2 class="reading-title">Three cards, drawn quietly, in the language of the field.</h2>
+  if (!apiKey) {
+    return c.json(
+      { error: 'The reading companion is not configured yet (missing API key).' },
+      503,
+    )
+  }
 
-    <div class="deck-stage" id="deckStage"></div>
-    <div class="deck-hint" id="deckHint">Click the deck — or the button above — to begin</div>
+  let body: any
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body.' }, 400)
+  }
 
-    <div class="reading-caption" id="readingCaption"></div>
+  const messages = sanitizeMessages(body?.messages)
+  if (!messages.length) {
+    return c.json({ error: 'No message provided.' }, 400)
+  }
 
-    <div class="peek-hint" id="peekHint">Tap a card to bring it forward</div>
+  const drawn = sanitizeDrawn(body?.drawn)
+  const system = buildSystemPrompt(drawn, DECK)
 
-    <div class="reading-meanings" id="readingMeanings"></div>
+  const upstream = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      stream: true,
+      messages: [{ role: 'system', content: system }, ...messages],
+    }),
+  })
 
-    <div class="reading-actions" id="readingActions">
-      <button class="reading-btn" id="againBtn">Draw Another</button>
-    </div>
-  </section>
+  if (!upstream.ok || !upstream.body) {
+    const detail = await upstream.text().catch(() => '')
+    console.error('upstream error', upstream.status, detail.slice(0, 500))
+    return c.json({ error: 'The reading companion is unavailable right now.' }, 502)
+  }
 
-</div>
+  // Re-emit the upstream SSE as a minimal, text-only stream so the client
+  // never has to know about the provider's chunk shape.
+  const stream = new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder()
+      const decoder = new TextDecoder()
+      const reader = upstream.body!.getReader()
+      let buffer = ''
+      const send = (obj: unknown) =>
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`))
 
-<script src="/static/deck-data.js"></script>
-<script src="/static/app.js"></script>
+      try {
+        for (;;) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() ?? ''
+          for (const line of lines) {
+            const trimmed = line.trim()
+            if (!trimmed.startsWith('data:')) continue
+            const payload = trimmed.slice(5).trim()
+            if (!payload || payload === '[DONE]') continue
+            try {
+              const parsed = JSON.parse(payload)
+              const delta = parsed?.choices?.[0]?.delta?.content
+              if (typeof delta === 'string' && delta) send({ delta })
+            } catch {
+              // ignore malformed keepalive/partial frames
+            }
+          }
+        }
+        send({ done: true })
+      } catch (err) {
+        console.error('stream error', err)
+        send({ error: 'The connection dropped mid-reply.' })
+      } finally {
+        try {
+          controller.close()
+        } catch {}
+        reader.releaseLock?.()
+      }
+    },
+  })
 
-</body>
-</html>`)
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-store, no-transform',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    },
+  })
+})
+
+// ── Optional ElevenLabs text-to-speech proxy (used only when configured) ──
+// Keeps the key server-side; the browser never sees it.
+app.post('/api/speak', async (c) => {
+  const key = c.env.ELEVENLABS_API_KEY
+  const voiceId = c.env.ELEVENLABS_VOICE_ID
+  if (!key || !voiceId) {
+    return c.json({ error: 'Voice is not configured.' }, 503)
+  }
+
+  let body: any
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body.' }, 400)
+  }
+
+  const text = typeof body?.text === 'string' ? body.text.trim().slice(0, 2000) : ''
+  if (!text) return c.json({ error: 'No text provided.' }, 400)
+
+  const upstream = await fetch(
+    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'xi-api-key': key },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+      }),
+    },
+  )
+
+  if (!upstream.ok) {
+    const detail = await upstream.text().catch(() => '')
+    console.error('elevenlabs error', upstream.status, detail.slice(0, 300))
+    return c.json({ error: 'Voice synthesis failed.' }, 502)
+  }
+
+  return new Response(upstream.body, {
+    headers: { 'Content-Type': 'audio/mpeg', 'Cache-Control': 'no-store' },
+  })
 })
 
 export default app

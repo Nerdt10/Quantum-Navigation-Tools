@@ -541,12 +541,15 @@ h1 .welcome{
 .reading-actions{
   margin-top: 48px;
   display:flex; gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
   opacity: 0;
   transition: opacity .6s .3s;
   pointer-events: none;
 }
 .reading-actions.show{ opacity: 1; pointer-events: auto; }
 .reading-btn{
+  display: inline-flex; align-items: center; gap: 8px;
   padding: 12px 26px;
   border-radius: 999px;
   font-family: var(--font-display);
@@ -556,6 +559,7 @@ h1 .welcome{
   background: rgba(255,255,255,.4);
   border: 1px solid var(--gold);
   cursor: pointer;
+  text-decoration: none;
   transition: all .3s;
   backdrop-filter: blur(6px);
 }
@@ -564,6 +568,20 @@ h1 .welcome{
   color: var(--ivory-0);
   border-color: var(--forest);
 }
+/* Primary action — carries the visitor into the companion chat */
+.reading-btn--primary{
+  background: var(--forest);
+  color: var(--ivory-0);
+  border-color: var(--forest);
+  font-weight: 600;
+}
+.reading-btn--primary:hover{
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--forest);
+}
+.reading-btn-arrow{ transition: transform .3s ease; }
+.reading-btn--primary:hover .reading-btn-arrow{ transform: translateX(3px); }
 
 @media (max-width: 780px){
   .hero{

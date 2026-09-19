@@ -55,6 +55,25 @@
 
   const wait = ms => new Promise(r => setTimeout(r, ms));
 
+  // Hand this reading to the chat companion. Lightweight and stateless — the
+  // three drawn cards go into sessionStorage (no database, no server state),
+  // and /chat reads them back to give the model its context.
+  const DRAWN_KEY = 'qnt_drawn_v1';
+  const rememberReading = (cards) => {
+    try {
+      const payload = (cards || []).slice(0, NUM_DRAW).map((c, i) => ({
+        position: POSITIONS[i],
+        n: c.n,
+        name: c.name,
+        kw: c.kw,
+      }));
+      sessionStorage.setItem(DRAWN_KEY, JSON.stringify(payload));
+    } catch (e) {
+      /* private mode / storage disabled — the chat still works, just without
+         the visitor's own cards in context. */
+    }
+  };
+
   const setCaption = (text) => {
     caption.style.opacity = 0;
     setTimeout(() => {
@@ -310,6 +329,10 @@
       </div>
     `).join('');
     meanings.classList.add('show');
+
+    // Hand the reading to the chat companion so it can talk about these exact
+    // cards. Lightweight and stateless — sessionStorage only, no database.
+    rememberReading(pool);
 
     await wait(400);
     actions.classList.add('show');
