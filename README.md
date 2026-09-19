@@ -73,9 +73,9 @@ Pure-white section, deliberately breaking from the ivory atmosphere above.
 
 Reading section base: #ffffff
 ```
-Typography: **Source Serif 4** (400–700, upright only) for headlines, subtitles, card faces, meanings and CTA labels; **Source Sans 3** (400–700) for small-cap labels, eyebrows and hints.
+Typography: **Source Serif 4** (400–700, upright) for subtitles, reading title, card faces, meanings and CTA labels; **Source Sans 3** (400–700) for small-cap labels, eyebrows and hints. The **hero headline** is the one exception — it keeps the original **Fraunces italic** as the brand's signature title treatment.
 
-> **Type note:** the original handoff specified Fraunces italic + wide-tracked Inter. That pairing is the classic AI-landing-page signature, so it was deliberately replaced with an upright, low-contrast editorial superfamily — no slanted type anywhere, and label tracking reduced from `.5em` to `.22em`. All other tokens (colors, spacing, radii, shadows, motion) still follow the handoff.
+> **Type note:** the original handoff specified Fraunces italic + wide-tracked Inter. The wide-tracked Inter labels were replaced with a sturdy upright editorial superfamily (Source Serif 4 / Source Sans 3) and label tracking was reduced from `.5em` to `.16–.22em`, since that pairing reads as the generic AI landing page. The **hero headline was deliberately restored to Fraunces italic** at the client's request — it is the only slanted type on the site. All other tokens (colors, spacing, radii, shadows, motion) still follow the handoff.
 
 ## Assets
 
