@@ -5,6 +5,11 @@
    ========================================================================== */
 
 :root{
+  /* Type system — solid, upright, established faces (no slants).
+     Deliberately replaced the AI-signature pairing (slanted Fraunces +
+     wide-tracked Inter) with a sturdy editorial superfamily. */
+  --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --ivory-0:  #f7f2e8;
   --ivory-1:  #efe8d8;
   --forest:   #2e3d2f;
@@ -21,7 +26,7 @@
 html{ height:100%; background: var(--ivory-0); scroll-behavior: smooth; }
 body{
   min-height:100%;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
   color: var(--ink);
   position:relative;
   background: transparent;
@@ -63,10 +68,10 @@ body{
 }
 .eyebrow{
   display:inline-flex; align-items:center; gap: 14px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 400;
-  font-size: 10.5px;
-  letter-spacing: .5em;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: .22em;
   text-transform: uppercase;
   color: var(--gold);
   margin-bottom: 36px;
@@ -78,12 +83,11 @@ body{
 }
 
 h1{
-  font-family: 'Fraunces', serif;
-  font-weight: 300;
-  font-style: italic;
-  font-size: clamp(38px, 5vw, 68px);
-  line-height: 1.08;
-  letter-spacing: -.02em;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(38px, 5vw, 66px);
+  line-height: 1.1;
+  letter-spacing: -.015em;
   color: var(--forest);
   margin: 0;
   opacity: 0; animation: rise 1.2s ease .3s forwards;
@@ -92,20 +96,19 @@ h1{
 h1 .welcome{
   display: block;
   font-size: .32em;
-  font-weight: 300;
-  letter-spacing: .05em;
+  font-weight: 500;
+  letter-spacing: .02em;
   color: var(--ink-soft);
   margin-bottom: 20px;
 }
 
 .sub{
   margin: 32px 0 0;
-  max-width: 42ch;
-  font-family: 'Fraunces', serif;
-  font-weight: 300;
-  font-style: italic;
-  font-size: clamp(15px, 1.2vw, 17px);
-  line-height: 1.7;
+  max-width: 46ch;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(16px, 1.25vw, 18px);
+  line-height: 1.68;
   color: var(--ink-soft);
   opacity: 0; animation: rise 1.2s ease .5s forwards;
   text-wrap: pretty;
@@ -120,11 +123,10 @@ h1 .welcome{
   display:inline-flex; align-items:center; gap:16px;
   padding: 16px 32px 16px 36px;
   border-radius: 999px;
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 400;
+  font-family: var(--font-display);
+  font-weight: 500;
   font-size: 16px;
-  letter-spacing: .01em;
+  letter-spacing: 0;
   color: var(--forest);
   background: rgba(255,255,255,.5);
   border: 1px solid var(--gold);
@@ -147,7 +149,7 @@ h1 .welcome{
   width: 26px; height: 26px; border-radius: 50%;
   border: 1px solid var(--gold);
   display:inline-flex; align-items:center; justify-content:center;
-  font-family: 'Inter', sans-serif; font-style: normal;
+  font-family: var(--font-sans);
   font-size: 12px;
   color: var(--gold);
   transition: all .4s;
@@ -208,9 +210,9 @@ h1 .welcome{
   position: absolute;
   bottom: 32px; left: 50%; transform: translateX(-50%);
   display:flex; flex-direction:column; align-items:center; gap: 10px;
-  font-family: 'Inter', sans-serif;
-  font-size: 9px; font-weight:400;
-  letter-spacing: .4em; text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: 9px; font-weight:600;
+  letter-spacing: .24em; text-transform: uppercase;
   color: var(--ink-faint);
   opacity: 0; animation: rise 1.4s ease 1.2s forwards, bob 3s ease-in-out infinite 2.5s;
 }
@@ -240,24 +242,23 @@ h1 .welcome{
   /* solid so it fully covers the ivory/sage atmosphere behind */
 }
 .reading-eyebrow{
-  font-family: 'Inter', sans-serif;
-  font-weight: 400;
-  font-size: 10.5px;
-  letter-spacing: .5em;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: .22em;
   text-transform: uppercase;
   color: var(--gold);
   margin-bottom: 20px;
 }
 .reading-title{
-  font-family: 'Fraunces', serif;
-  font-weight: 300;
-  font-style: italic;
-  font-size: clamp(28px, 3.6vw, 44px);
-  line-height: 1.2;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(30px, 3.6vw, 46px);
+  line-height: 1.22;
   color: var(--forest);
-  max-width: 22ch;
+  max-width: 26ch;
   margin-bottom: 60px;
-  letter-spacing: -.01em;
+  letter-spacing: -.012em;
 }
 
 /* Deck stage */
@@ -329,18 +330,18 @@ h1 .welcome{
   color: rgba(201,166,104,.9);
 }
 .card .corner{
-  position:absolute; font-family:'Fraunces',serif; font-style:italic;
-  font-size: 11px; color: rgba(201,166,104,.6); letter-spacing:.1em;
+  position:absolute; font-family:var(--font-display);
+  font-size: 11px; color: rgba(201,166,104,.6); letter-spacing:.06em;
 }
 .card .corner.tl{ top: 10px; left: 12px; }
 .card .corner.br{ bottom: 10px; right: 12px; transform: rotate(180deg); }
 
 /* PDF-style card face: green bg, gold serif, centered rhythm */
 .card .front-num{
-  font-family:'Fraunces',serif;
-  font-weight: 400;
+  font-family: var(--font-display);
+  font-weight: 600;
   font-size: 12px;
-  letter-spacing: .05em;
+  letter-spacing: .04em;
   color: rgba(201,166,104,.7);
   line-height: 1;
   margin-bottom: 10px;
@@ -349,10 +350,10 @@ h1 .welcome{
 .card .front-label{
   display: inline-flex; align-items: center; justify-content: center;
   gap: 8px;
-  font-family: 'Fraunces', serif;
-  font-weight: 500;
-  font-size: 10.5px;
-  letter-spacing: .28em;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: .16em;
   text-transform: uppercase;
   color: var(--gold-soft);
   margin-bottom: 8px;
@@ -367,10 +368,10 @@ h1 .welcome{
 .card .front-label::after{ content: "··✦"; }
 
 .card .front-kw{
-  font-family:'Fraunces',serif;
+  font-family: var(--font-sans);
   font-weight: 400;
-  font-size: 9.5px;
-  line-height: 1.5;
+  font-size: 10px;
+  line-height: 1.55;
   color: var(--gold-soft);
   padding: 0 4px;
   text-wrap: balance;
@@ -396,12 +397,12 @@ h1 .welcome{
 }
 
 .card .front-name{
-  font-family:'Fraunces',serif;
-  font-weight: 400;
-  font-size: 11px;
-  line-height: 1.2;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12.5px;
+  line-height: 1.25;
   text-transform: uppercase;
-  letter-spacing: .08em;
+  letter-spacing: .04em;
   color: var(--gold-soft);
   padding: 0 4px;
   text-wrap: balance;
@@ -433,9 +434,9 @@ h1 .welcome{
 /* Peek affordance hint — shown only when the drawn cards actually overlap */
 .peek-hint{
   margin-top: 24px;
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  letter-spacing: .35em;
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  letter-spacing: .16em;
   text-transform: uppercase;
   color: var(--ink-faint);
   opacity: 0;
@@ -447,9 +448,10 @@ h1 .welcome{
   position: absolute;
   top: -34px; left: 0; right: 0;
   text-align: center;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
+  font-weight: 600;
   font-size: 10px;
-  letter-spacing: .4em;
+  letter-spacing: .2em;
   text-transform: uppercase;
   color: var(--gold);
   opacity: 0;
@@ -462,9 +464,9 @@ h1 .welcome{
 
 .deck-hint{
   margin-top: 32px;
-  font-family: 'Inter', sans-serif;
-  font-size: 10.5px;
-  letter-spacing: .35em;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: .16em;
   text-transform: uppercase;
   color: var(--ink-faint);
   opacity: 0;
@@ -481,10 +483,9 @@ h1 .welcome{
 
 .reading-caption{
   margin-top: 32px;
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 300;
-  font-size: clamp(15px, 1.4vw, 19px);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(16px, 1.4vw, 19px);
   color: var(--ink-soft);
   max-width: 32ch;
   line-height: 1.6;
@@ -507,24 +508,24 @@ h1 .welcome{
   padding: 0 8px;
 }
 .meaning-cell .m-pos{
-  font-family: 'Inter', sans-serif;
-  font-size: 10px; letter-spacing: .5em; text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 10px; letter-spacing: .22em; text-transform: uppercase;
   color: var(--gold);
   margin-bottom: 12px;
 }
 .meaning-cell .m-name{
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 400;
-  font-size: 20px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 21px;
   color: var(--forest);
   margin-bottom: 16px;
   letter-spacing: -.005em;
 }
 .meaning-cell .m-text{
-  font-family: 'Fraunces', serif;
-  font-weight: 300;
-  font-size: 14px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 15px;
   line-height: 1.6;
   color: rgba(46,61,47,.75);
   text-wrap: pretty;
@@ -544,8 +545,8 @@ h1 .welcome{
 .reading-btn{
   padding: 12px 26px;
   border-radius: 999px;
-  font-family: 'Fraunces', serif;
-  font-style: italic;
+  font-family: var(--font-display);
+  font-weight: 500;
   font-size: 14px;
   color: var(--forest);
   background: rgba(255,255,255,.4);

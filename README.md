@@ -8,14 +8,14 @@ Recreated from the Genspark Design handoff (`designer2-cf4103bf-327e-4f8c-82b4-b
 
 - **Name**: Dr. Tashema — Quantum Developmental Tools
 - **Goal**: A ceremonial, unhurried landing page that invites visitors into a free tarot-style card reading.
-- **Tech stack**: Hono + TypeScript on Cloudflare Pages; vanilla JS for the reading sequence; CDN Google Fonts (Fraunces + Inter).
+- **Tech stack**: Hono + TypeScript on Cloudflare Pages; vanilla JS for the reading sequence; CDN Google Fonts (Source Serif 4 + Source Sans 3).
 - **Feel**: Ivory watercolor hero, forest-green + gold typography, whispery card SFX, painterly card backs.
 
 ## Features (completed)
 
 ### Hero — "the product shot"
 - Full-viewport flex layout: copy on the left (max-width 480px), a tilted stack of three overlapping card backs on the right.
-- Gold-hairline eyebrow ("✦ Quantum Developmental Tools"), "Welcome to" line, large italic **Fraunces** headline, subtitle, and the pill CTA "Get a Free Card Reading ↓".
+- Gold-hairline eyebrow ("✦ Quantum Developmental Tools"), "Welcome to" line, large upright **Source Serif 4** headline, subtitle, and the pill CTA "Get a Free Card Reading ↓".
 - Orchestrated rise-in entrance (0.1s → 1.4s), hover lift on the card stack, and a bobbing "SCROLL TO RECEIVE" hint.
 - Fixed ivory watercolor atmosphere (`hero-ivory.jpg`) with a soft cream wash overlay.
 
@@ -73,7 +73,9 @@ Pure-white section, deliberately breaking from the ivory atmosphere above.
 
 Reading section base: #ffffff
 ```
-Typography: **Fraunces** (300/400/500, italic + roman) for headlines, card faces, meanings, CTA labels; **Inter** (300/400/500) for small-cap labels, eyebrows, hints.
+Typography: **Source Serif 4** (400–700, upright only) for headlines, subtitles, card faces, meanings and CTA labels; **Source Sans 3** (400–700) for small-cap labels, eyebrows and hints.
+
+> **Type note:** the original handoff specified Fraunces italic + wide-tracked Inter. That pairing is the classic AI-landing-page signature, so it was deliberately replaced with an upright, low-contrast editorial superfamily — no slanted type anywhere, and label tracking reduced from `.5em` to `.22em`. All other tokens (colors, spacing, radii, shadows, motion) still follow the handoff.
 
 ## Assets
 
