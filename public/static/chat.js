@@ -1,25 +1,44 @@
 /* ==========================================================================
-   Dr. Tashema — "Ask about your reading" chat room
+   QSyrii — the reading companion chat
    - Streams replies from POST /api/chat (SSE, text-only deltas)
    - Carries the visitor's three drawn cards as context on every request
-   - Voice IN:  Web Speech recognition (dictation), when supported
+   - Two ways to talk: "Chat" (type) and "Speak" (dictation + spoken replies)
    - Voice OUT: read-aloud via ElevenLabs (if configured) or browser speech
    ========================================================================== */
 (() => {
-  const THREAD_KEY = 'qnt_thread_v1'
   const DRAWN_KEY = 'qnt_drawn_v1'
 
   const el = (id) => document.getElementById(id)
+  const body = document.body
   const thread = el('chatThread')
   const scroll = el('chatScroll')
   const form = el('chatForm')
   const input = el('chatInput')
   const sendBtn = el('sendBtn')
   const micBtn = el('micBtn')
-  const voiceToggle = el('voiceToggle')
-  const voiceLabel = voiceToggle ? voiceToggle.querySelector('.chat-voice-label') : null
+  const helloTitle = el('helloTitle')
+  const helloSub = el('helloSub')
+
+  const segChat = el('segChat')
+  const segSpeak = el('segSpeak')
+  const typingDock = el('typingDock')
+  const speakDock = el('speakDock')
+  const orbBtn = el('orbBtn')
+  const voiceStatus = el('voiceStatus')
+  const voiceTranscript = el('voiceTranscript')
+
+  const plusBtn = el('plusBtn')
+  const plusPop = el('plusPop')
+  const plusList = el('plusList')
+  const autoSpeakRow = el('autoSpeakRow')
+  const autoSpeakCheck = el('autoSpeakCheck')
+  const popNewChat = el('popNewChat')
+  const newChatBtn = el('newChatBtn')
+
   const readingBox = el('chatReading')
   const readingCards = el('chatReadingCards')
+
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
   // ── Read the visitor's drawn cards (written by the reading page) ───────
   function loadDrawn() {
@@ -43,9 +62,8 @@
   }
 
   const drawn = loadDrawn()
-  // Backfill names from the canonical deck if the reading page only stored n.
-  if (window.QNT_DECK) byNumberFallback(drawn)
-  function byNumberFallback(list) {
+  if (window.QNT_DECK) backfillNames(drawn)
+  function backfillNames(list) {
     const byN = new Map(window.QNT_DECK.map((c) => [c.n, c]))
     for (const d of list) {
       if (!d.name) {
@@ -69,6 +87,9 @@
         </div>`,
       )
       .join('')
+    helloSub.textContent = 'Your three cards are ready — ask QSyrii anything about them.'
+  } else if (helloSub) {
+    helloSub.textContent = 'Ask QSyrii about your cards or the deck.'
   }
 
   // ── History ───────────────────────────────────────────────────────────
@@ -93,7 +114,11 @@
 
   function scrollToBottom(smooth = true) {
     if (!scroll) return
-    scroll.scrollTo({ top: scroll.scrollHeight, behavior: smooth ? 'smooth' : 'auto' })
+    scroll.scrollTo({ top: scroll.scrollHeight, behavior: smooth && !reduceMotion ? 'smooth' : 'auto' })
+  }
+
+  function beginConversation() {
+    if (body.classList.contains('is-empty')) body.classList.remove('is-empty')
   }
 
   // ── Message rendering ─────────────────────────────────────────────────
@@ -122,27 +147,15 @@
       const btn = node.querySelector('.msg-speak')
       btn.hidden = false
       btn.addEventListener('click', () => {
-        const t = node.querySelector('.msg-text').innerText
-        speak(t, btn)
+        speak(node.querySelector('.msg-text').innerText, btn)
       })
     }
     return node
   }
 
-  // A small greeting, rendered locally (no API call, no token cost).
-  function renderGreeting() {
-    const names = drawn.map((d) => d.name).filter(Boolean)
-    const body = names.length
-      ? `These three cards are yours — ${names[0]} for the past, ${names[1]} for the present, ${names[2]} for the future.\n\nI'm here to help you sit with them. Ask me anything about your reading.`
-      : `I'm here to help you sit with the Quantum Developmental Tools deck.\n\nDraw three cards on the reading page and I can speak to them directly — or ask me anything about the deck now.`
-    addAssistantMessage(body)
-    history.push({ role: 'assistant', content: body })
-    renderStarters()
-  }
-
+  // ── Starter prompts live in the "+" popover ───────────────────────────
   function renderStarters() {
-    const wrap = document.createElement('div')
-    wrap.className = 'chat-starters'
+    if (!plusList) return
     const prompts = drawn.length
       ? [
           'What do these three cards say together?',
@@ -150,33 +163,54 @@
           'What should I focus on next?',
         ]
       : ['How do I use this deck?', 'What are the Quantum Developmental Tools?']
-    wrap.innerHTML =
-      `<span class="chat-starters-label">Try asking</span>` +
-      prompts
-        .map((p) => `<button class="chat-starter" type="button">${escapeHtml(p)}</button>`)
-        .join('')
-    for (const btn of wrap.querySelectorAll('.chat-starter')) {
+    plusList.innerHTML = prompts
+      .map((p) => `<button class="chat-pop-row" type="button">${escapeHtml(p)}</button>`)
+      .join('')
+    for (const btn of plusList.querySelectorAll('.chat-pop-row')) {
       btn.addEventListener('click', () => {
         input.value = btn.textContent
         autoGrow()
+        closePopover()
         form.requestSubmit()
       })
     }
-    thread.appendChild(wrap)
-    scrollToBottom(false)
   }
+
+  renderStarters()
+
+  // ── "+" popover ───────────────────────────────────────────────────────
+  function openPopover() {
+    plusPop.hidden = false
+    plusBtn.setAttribute('aria-expanded', 'true')
+  }
+  function closePopover() {
+    plusPop.hidden = true
+    plusBtn.setAttribute('aria-expanded', 'false')
+  }
+  plusBtn?.addEventListener('click', (e) => {
+    e.stopPropagation()
+    if (plusPop.hidden) openPopover()
+    else closePopover()
+  })
+  document.addEventListener('click', (e) => {
+    if (!plusPop.hidden && !plusPop.contains(e.target) && e.target !== plusBtn) closePopover()
+  })
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !plusPop.hidden) closePopover()
+  })
 
   // ── Streaming send ────────────────────────────────────────────────────
   async function send(text) {
     if (streaming) return
-    const clean = text.trim()
+    const clean = String(text || '').trim()
     if (!clean) return
 
     streaming = true
-    sendBtn.disabled = true
+    syncSendBtn()
     input.value = ''
     autoGrow()
 
+    beginConversation()
     addUserMessage(clean)
     history.push({ role: 'user', content: clean })
 
@@ -254,9 +288,10 @@
       textEl.innerHTML = `<div class="chat-error">Connection interrupted. Please try again.</div>`
     } finally {
       streaming = false
-      sendBtn.disabled = false
+      syncSendBtn()
       controller = null
       scrollToBottom()
+      if (mode === 'speak') setVoiceStatus('Tap to speak')
     }
   }
 
@@ -339,87 +374,168 @@
     window.speechSynthesis.speak(u)
   }
 
-  let cachedVoices = null
   function pickVoice() {
     const all = window.speechSynthesis?.getVoices?.() || []
     if (!all.length) return null
-    cachedVoices = all
-    // Prefer a warm English voice; fall back to the first English voice.
     const en = all.filter((v) => /^en/i.test(v.lang))
-    const preferred =
+    return (
       en.find((v) => /Samantha|Serena|Moira|Tessa|Karen|Google UK English Female/i.test(v.name)) ||
       en.find((v) => /Google US English/i.test(v.name)) ||
-      en[0]
-    return preferred || null
+      en[0] ||
+      null
+    )
   }
   if (window.speechSynthesis) {
-    window.speechSynthesis.onvoiceschanged = () => { cachedVoices = null; pickVoice() }
+    window.speechSynthesis.onvoiceschanged = () => pickVoice()
   }
 
-  if (voiceToggle) {
-    voiceToggle.addEventListener('click', () => {
-      autoSpeak = !autoSpeak
-      voiceToggle.setAttribute('aria-pressed', String(autoSpeak))
-      if (voiceLabel) voiceLabel.textContent = autoSpeak ? 'Reading aloud' : 'Read aloud'
-      if (!autoSpeak) stopSpeaking()
-    })
+  function setAutoSpeak(on) {
+    autoSpeak = on
+    if (autoSpeakRow) autoSpeakRow.setAttribute('aria-pressed', String(on))
+    if (autoSpeakCheck) autoSpeakCheck.textContent = on ? '✓' : '—'
+    if (!on) stopSpeaking()
   }
+  autoSpeakRow?.addEventListener('click', () => setAutoSpeak(!autoSpeak))
 
-  // ── Voice IN (dictation) ──────────────────────────────────────────────
+  // ── Voice IN (dictation) — shared by the mic button and the orb ───────
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-  if (SR && micBtn) {
-    micBtn.hidden = false
-    const rec = new SR()
-    rec.lang = 'en-US'
-    rec.interimResults = true
-    rec.continuous = false
-    let listening = false
-    let baseText = ''
+  let rec = null
+  let listening = false
+  let baseText = ''
 
-    rec.onresult = (e) => {
-      let interim = ''
-      let final = ''
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript
-        if (e.results[i].isFinal) final += t
-        else interim += t
-      }
-      if (final) baseText = (baseText + ' ' + final).trim()
-      input.value = (baseText + ' ' + interim).trim()
-      autoGrow()
-    }
-    const stopUI = () => {
-      listening = false
-      micBtn.classList.remove('is-listening')
-      micBtn.setAttribute('aria-pressed', 'false')
-    }
-    rec.onend = stopUI
-    rec.onerror = stopUI
+  if (SR && micBtn) micBtn.hidden = false
 
-    micBtn.addEventListener('click', () => {
-      if (listening) { try { rec.stop() } catch {} ; stopUI(); return }
-      stopSpeaking()
-      baseText = input.value.trim()
-      try {
-        rec.start()
-        listening = true
-        micBtn.classList.add('is-listening')
-        micBtn.setAttribute('aria-pressed', 'true')
-      } catch {}
-    })
+  function setVoiceStatus(t) { if (voiceStatus) voiceStatus.textContent = t }
+
+  function setListeningUI(on) {
+    listening = on
+    if (micBtn) {
+      micBtn.classList.toggle('is-listening', on)
+      micBtn.setAttribute('aria-pressed', String(on))
+    }
+    if (orbBtn) {
+      orbBtn.classList.toggle('is-listening', on)
+      orbBtn.setAttribute('aria-pressed', String(on))
+    }
+    setVoiceStatus(on ? 'Listening…' : 'Tap to speak')
   }
+
+  function startListening() {
+    if (!SR) return
+    if (!rec) {
+      rec = new SR()
+      rec.lang = 'en-US'
+      rec.interimResults = true
+      rec.continuous = false
+      rec.onresult = (e) => {
+        let interim = ''
+        let final = ''
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const t = e.results[i][0].transcript
+          if (e.results[i].isFinal) final += t
+          else interim += t
+        }
+        if (final) baseText = (baseText + ' ' + final).trim()
+        const shown = (baseText + ' ' + interim).trim()
+        if (mode === 'speak') {
+          if (voiceTranscript) voiceTranscript.textContent = shown
+        } else {
+          input.value = shown
+          autoGrow()
+        }
+      }
+      rec.onend = () => {
+        const wasListening = listening
+        setListeningUI(false)
+        if (mode === 'speak' && wasListening) {
+          const said = (baseText || '').trim()
+          if (said) {
+            if (voiceTranscript) voiceTranscript.textContent = ''
+            send(said)
+          }
+        }
+      }
+      rec.onerror = () => setListeningUI(false)
+    }
+    stopSpeaking()
+    baseText = ''
+    if (mode === 'speak') { if (voiceTranscript) voiceTranscript.textContent = '' }
+    else baseText = input.value.trim()
+    try {
+      rec.start()
+      setListeningUI(true)
+    } catch {}
+  }
+
+  function stopListening() {
+    if (rec) { try { rec.stop() } catch {} }
+    setListeningUI(false)
+  }
+
+  micBtn?.addEventListener('click', () => (listening ? stopListening() : startListening()))
+  orbBtn?.addEventListener('click', () => (listening ? stopListening() : startListening()))
+
+  // ── Chat / Speak mode switch ──────────────────────────────────────────
+  let mode = 'chat'
+  function setMode(next) {
+    mode = next
+    body.dataset.mode = next
+    if (segChat) {
+      segChat.classList.toggle('is-active', next === 'chat')
+      segChat.setAttribute('aria-selected', String(next === 'chat'))
+    }
+    if (segSpeak) {
+      segSpeak.classList.toggle('is-active', next === 'speak')
+      segSpeak.setAttribute('aria-selected', String(next === 'speak'))
+    }
+    if (typingDock) typingDock.hidden = next !== 'chat'
+    if (speakDock) speakDock.hidden = next !== 'speak'
+    if (next === 'speak') {
+      setAutoSpeak(true)
+      if (SR) setVoiceStatus('Tap to speak')
+      else if (voiceStatus) voiceStatus.textContent = 'Voice input isn’t supported in this browser.'
+    } else {
+      setAutoSpeak(false)
+      if (listening) stopListening()
+    }
+    closePopover()
+    if (!body.classList.contains('is-empty')) scrollToBottom(false)
+  }
+  segChat?.addEventListener('click', () => setMode('chat'))
+  segSpeak?.addEventListener('click', () => setMode('speak'))
+
+  // ── New chat ──────────────────────────────────────────────────────────
+  function newChat() {
+    stopSpeaking()
+    if (listening) stopListening()
+    if (controller) { try { controller.abort() } catch {} }
+    history = []
+    thread.innerHTML = ''
+    input.value = ''
+    autoGrow()
+    if (voiceTranscript) voiceTranscript.textContent = ''
+    closePopover()
+    body.classList.add('is-empty')
+    syncSendBtn()
+  }
+  newChatBtn?.addEventListener('click', newChat)
+  popNewChat?.addEventListener('click', newChat)
 
   // ── Composer behaviour ────────────────────────────────────────────────
   function autoGrow() {
     input.style.height = 'auto'
     input.style.height = Math.min(input.scrollHeight, 180) + 'px'
   }
-  input.addEventListener('input', autoGrow)
+  function syncSendBtn() {
+    const ready = input.value.trim().length > 0 && !streaming
+    sendBtn.disabled = !ready
+  }
+  input.addEventListener('input', () => { autoGrow(); syncSendBtn() })
 
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      form.requestSubmit()
+      if (!sendBtn.disabled) form.requestSubmit()
     }
   })
 
@@ -429,14 +545,18 @@
     send(input.value)
   })
 
-  // ── Boot: check which voice engine is available, then greet ───────────
+  // ── Boot ──────────────────────────────────────────────────────────────
+  if (!SR && segSpeak) {
+    segSpeak.disabled = true
+    segSpeak.title = 'Voice input isn’t supported in this browser'
+  }
+
   fetch('/api/health')
     .then((r) => r.json())
     .then((h) => { if (h && h.ttsConfigured) ttsEngine = 'elevenlabs' })
     .catch(() => {})
     .finally(() => {
       autoGrow()
-      renderGreeting()
-      scrollToBottom(false)
+      syncSendBtn()
     })
 })()

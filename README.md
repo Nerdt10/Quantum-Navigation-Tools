@@ -1,6 +1,6 @@
 # Dr. Tashema — Quantum Developmental Tools
 
-A quiet, editorial marketing site for **Dr. Tashema's Quantum Developmental Tools** deck. The hero introduces the deck as a product shot; below it, a free three-card reading lets visitors shuffle a fanned deck and auto-draw **Past · Present · Future**, each card flipping to reveal one of the 78 *Quantum Navigational Tools* cards with its full meaning. From there, **Learn More About Your Cards** opens a chat room where visitors can ask questions about their own three cards — typing or speaking, with replies they can have read aloud.
+A quiet, editorial marketing site for **Dr. Tashema's Quantum Developmental Tools** deck. The hero introduces the deck as a product shot; below it, a free three-card reading lets visitors shuffle a fanned deck and auto-draw **Past · Present · Future**, each card flipping to reveal one of the 78 *Quantum Navigational Tools* cards with its full meaning. From there, a chat room — **QSyrii** — lets visitors ask questions about their own three cards by typing or speaking, with replies they can have read aloud.
 
 The landing and reading experience was recreated from the Genspark Design handoff (`designer2-cf4103bf-327e-4f8c-82b4-b9be8a9227a6`) at **high fidelity** — colors, spacing, easing curves, sound volumes and card-face layout match the handoff README.
 
@@ -27,15 +27,18 @@ Pure-white section, deliberately breaking from the ivory atmosphere above.
 - **Tap-to-peek**: on narrow screens the three drawn cards overlap and a card's face can be covered. Tapping (or Enter/Space on) a revealed card lifts it clear to the front so its name + keywords are readable; tapping again settles it back. A hint line appears only when the cards actually overlap.
 - **Interpretation grid**: three columns (position / card name / full meaning), fading in after the reveal.
 - **Draw Another** button resets to the idle fan and runs a fresh reading.
-- **Learn More About Your Cards**: the primary action after a reveal, taking the visitor to `/chat` with their three cards carried along.
 
-### Chat room — "ask about your reading" (`/chat`)
-A ChatGPT-style conversation surface dressed in the same ivory / forest / gold system.
+### Chat room — QSyrii (`/chat`)
+A calm, ChatGPT-style conversation surface dressed in the same ivory / forest / gold system.
+- **Layout**: a small top bar (back chevron · centered **Chat / Speak** segmented toggle · new-chat bubble icon), a centered empty-state greeting ("Ready when you are."), and a single wide pill composer (`+` · text field · mic · send). The greeting collapses once a conversation starts and the thread fills the screen.
 - **Your reading strip**: the three drawn cards pinned above the thread, with a "draw again" link back to the reading.
 - **Streaming replies**: replies arrive token-by-token from `POST /api/chat` (text-only SSE, re-emitted from the provider so the client never sees provider chunk shapes).
 - **Context injection**: the visitor's own three cards (name, keywords, canonical meaning) are injected into the system prompt on every request, so the companion speaks to *their* reading.
-- **Voice in**: dictation via the Web Speech API when the browser supports it (the mic button is hidden otherwise).
-- **Voice out**: a per-message **Listen** pill, plus a **Read aloud** toggle that auto-reads each new reply. Uses ElevenLabs when configured (`/api/speak`) and falls back to the browser's speech synthesis when it isn't.
+- **Two modes** (the `Chat ⇄ Speak` toggle):
+  - **Chat** — type a question; the mic button dictates into the text field.
+  - **Speak** — replaces the composer with a large voice orb; tap it, speak, and the question sends automatically when you stop. Replies are read aloud automatically in this mode.
+- **Voice out**: a per-message **Listen** pill, plus a **Read replies aloud** option inside the `+` menu. Uses ElevenLabs when configured (`/api/speak`) and falls back to the browser's speech synthesis when it isn't.
+- **`+` menu**: context-aware starter prompts, the read-aloud toggle, a link to draw another reading, and **New chat**. Rendered locally — no API call.
 - **Guardrails**: the system prompt forbids prediction, medical/legal/financial advice, third-party claims, and crisis counselling (it redirects instead). Replies stay plain prose, 2–4 short paragraphs.
 - **Cost control**: history is capped to the last 12 turns and 4000 chars per turn; the greeting and starter prompts render locally with no API call.
 
@@ -106,9 +109,10 @@ The card back and hero atmosphere are **user-supplied final brand assets** (do n
 2. Click **Get a Free Card Reading** (or click the fanned deck) to begin.
 3. A three-card reading is drawn automatically: **Past · Present · Future**. Each card flips to reveal its name and keywords.
 4. Read the three interpretations below the cards.
-5. Click **Learn More About Your Cards** to open the chat room, where your three cards are already in context.
-6. In the chat, type a question or tap the **mic** to speak it; tap **Listen** on a reply (or the **Read aloud** toggle) to hear it.
-7. Click **Draw Another** for a new reading — the chat will pick up the new cards.
+5. Open the chat room — your three cards are already in context, shown in a strip at the top.
+6. **Chat mode**: type a question, or tap the **mic** to dictate it. **Speak mode** (toggle at the top): tap the orb, speak, and your question sends itself.
+7. Tap **Listen** on a reply — or turn on **Read replies aloud** in the `+` menu — to hear it spoken.
+8. Click **Draw Another** for a new reading — the chat will pick up the new cards.
 
 ## Local development
 

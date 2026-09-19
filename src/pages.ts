@@ -84,11 +84,7 @@ ${head({
     <div class="reading-meanings" id="readingMeanings"></div>
 
     <div class="reading-actions" id="readingActions">
-      <a class="reading-btn reading-btn--primary" id="learnMoreBtn" href="/chat">
-        Learn More About Your Cards
-        <span class="reading-btn-arrow" aria-hidden="true">→</span>
-      </a>
-      <button class="reading-btn" id="againBtn" type="button">Draw Another</button>
+      <button class="reading-btn reading-btn--primary" id="againBtn" type="button">Draw Another</button>
     </div>
   </section>
 
@@ -106,29 +102,31 @@ export function chatPage(): string {
 <html lang="en">
 <head>
 ${head({
-  title: 'Ask About Your Reading — Dr. Tashema',
+  title: 'QSyrii — Ask About Your Cards',
   description:
-    'Ask questions about the three cards you drew. Type or speak, and have the reply read aloud.',
+    'Ask QSyrii about the three cards you drew. Type or speak, and hear the reply read aloud.',
   css: ['/static/chat.css'],
 })}
 </head>
-<body class="chat-body">
+<body class="chat-body is-empty" data-mode="chat">
 
-<header class="chat-top">
-  <a class="chat-back" href="/" aria-label="Back to the reading">
-    <span aria-hidden="true">←</span> Reading
+<div class="chat-bar">
+  <a class="chat-icon-btn" href="/" title="Back to your reading" aria-label="Back to your reading">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </a>
-  <div class="chat-brand">
-    <span class="chat-brand-mark" aria-hidden="true">✦</span>
-    <span class="chat-brand-text">Dr. Tashema&rsquo;s Quantum Developmental Tools</span>
-  </div>
-  <button class="chat-voice-toggle" id="voiceToggle" type="button" aria-pressed="false">
-    <span class="chat-voice-icon" aria-hidden="true">🔊</span>
-    <span class="chat-voice-label">Read aloud</span>
-  </button>
-</header>
 
-<main class="chat-main" id="chatMain">
+  <div class="chat-seg" role="tablist" aria-label="Choose how to talk to QSyrii">
+    <button class="chat-seg-btn is-active" id="segChat" data-mode="chat" type="button" role="tab" aria-selected="true">Chat</button>
+    <button class="chat-seg-btn" id="segSpeak" data-mode="speak" type="button" role="tab" aria-selected="false">Speak</button>
+  </div>
+
+  <button class="chat-icon-btn chat-bar-end" id="newChatBtn" type="button" title="Start a new chat" aria-label="Start a new chat">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12.4A7.4 7.4 0 0 1 12.6 19.8H8.2L4 22.4l.9-4.1a7.4 7.4 0 0 1 7.5-14 7.4 7.4 0 0 1 7.6 8.1Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+  </button>
+</div>
+
+<main class="chat-stage" id="chatStage">
+
   <div class="chat-scroll" id="chatScroll">
     <!-- the visitor's reading, if they drew one -->
     <section class="chat-reading" id="chatReading" hidden>
@@ -142,26 +140,68 @@ ${head({
     <div class="chat-thread" id="chatThread" role="log" aria-live="polite" aria-label="Conversation"></div>
   </div>
 
-  <form class="chat-composer" id="chatForm" autocomplete="off">
-    <label class="chat-visually-hidden" for="chatInput">Ask about your cards</label>
-    <textarea
-      id="chatInput"
-      class="chat-input"
-      rows="1"
-      placeholder="Ask about your cards…"
-      maxlength="2000"></textarea>
+  <div class="chat-hello">
+    <h1 class="chat-hello-title" id="helloTitle">Ready when you are.</h1>
+    <p class="chat-hello-sub" id="helloSub">Ask QSyrii about your cards.</p>
+  </div>
 
-    <button class="chat-mic" id="micBtn" type="button" title="Speak your question" aria-label="Speak your question" hidden>
-      <span aria-hidden="true">🎙</span>
-    </button>
+  <footer class="chat-dock">
 
-    <button class="chat-send" id="sendBtn" type="submit" aria-label="Send">
-      <span aria-hidden="true">↑</span>
-    </button>
-  </form>
-  <p class="chat-note">
-    A reflective companion for the deck — not medical, legal or financial advice.
-  </p>
+    <div class="chat-typing" id="typingDock">
+      <form class="chat-composer" id="chatForm" autocomplete="off">
+        <button class="chat-plus" id="plusBtn" type="button" aria-label="Suggestions and options" aria-expanded="false">
+          <span aria-hidden="true">+</span>
+        </button>
+
+        <label class="chat-visually-hidden" for="chatInput">Ask QSyrii</label>
+        <textarea
+          id="chatInput"
+          class="chat-input"
+          rows="1"
+          placeholder="Ask QSyrii"
+          maxlength="2000"></textarea>
+
+        <button class="chat-mic" id="micBtn" type="button" title="Speak your question" aria-label="Speak your question" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M6 11.5a6 6 0 0 0 12 0M12 17.6V21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </button>
+
+        <button class="chat-send" id="sendBtn" type="submit" aria-label="Send" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+
+        <div class="chat-pop" id="plusPop" hidden>
+          <span class="chat-pop-label">Try asking</span>
+          <div class="chat-pop-list" id="plusList"></div>
+          <div class="chat-pop-sep"></div>
+          <button class="chat-pop-row" id="autoSpeakRow" type="button" aria-pressed="false">
+            <span>Read replies aloud</span>
+            <span class="chat-pop-check" id="autoSpeakCheck" aria-hidden="true">—</span>
+          </button>
+          <a class="chat-pop-row" href="/">
+            <span>Draw another reading</span>
+            <span class="chat-pop-check" aria-hidden="true">→</span>
+          </a>
+          <button class="chat-pop-row" id="popNewChat" type="button">
+            <span>New chat</span>
+            <span class="chat-pop-check" aria-hidden="true">↺</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="chat-speaking" id="speakDock" hidden>
+      <button class="chat-orb" id="orbBtn" type="button" aria-label="Tap to speak" aria-pressed="false">
+        <span class="chat-orb-core" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M6 11.5a6 6 0 0 0 12 0M12 17.6V21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </span>
+      </button>
+      <p class="chat-voice-status" id="voiceStatus">Tap to speak</p>
+      <p class="chat-voice-transcript" id="voiceTranscript" aria-live="polite"></p>
+    </div>
+
+    <p class="chat-note">A reflective companion for the deck — not medical, legal or financial advice.</p>
+  </footer>
+
 </main>
 
 <script src="/static/deck-data.js"></script>
