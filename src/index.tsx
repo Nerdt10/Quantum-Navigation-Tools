@@ -74,6 +74,8 @@ app.get('/', (c) => {
 
     <div class="reading-caption" id="readingCaption"></div>
 
+    <div class="peek-hint" id="peekHint">Tap a card to bring it forward</div>
+
     <div class="reading-meanings" id="readingMeanings"></div>
 
     <div class="reading-actions" id="readingActions">

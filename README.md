@@ -24,12 +24,13 @@ Pure-white section, deliberately breaking from the ivory atmosphere above.
 - **Idle fan**: 10 card backs animate in on load in a wide U-shaped arc; the stage is clickable and keyboard-focusable.
 - **Sequence**: gather → riffle ×2 (with shuffle SFX) → fan out → auto-pick 3 → reveal with a flip and draw SFX.
 - **Reveal**: each card shows number, name, filigree divider, and keywords; a Past/Present/Future label floats above.
+- **Tap-to-peek**: on narrow screens the three drawn cards overlap and a card's face can be covered. Tapping (or Enter/Space on) a revealed card lifts it clear to the front so its name + keywords are readable; tapping again settles it back. A hint line appears only when the cards actually overlap.
 - **Interpretation grid**: three columns (position / card name / full meaning), fading in after the reveal.
 - **Draw Another** button resets to the idle fan and runs a fresh reading.
 
 ### Quality floor
 - Responsive: hero flips to a centered column at ≤780px; the meaning grid collapses to one column at ≤820px; fan spread/stage width scale with viewport.
-- Keyboard access: focus-visible ring on the CTA, deck stage, and buttons; Enter/Space triggers the deck.
+- Keyboard access: focus-visible ring on the CTA, deck stage, drawn cards, and buttons; Enter/Space triggers the deck and toggles peek.
 - Honors `prefers-reduced-motion` (animations and smooth scroll reduced).
 - Guard flag prevents re-entry while a reading is in flight; audio is unlocked on the first user gesture.
 

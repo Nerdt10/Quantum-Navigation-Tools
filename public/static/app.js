@@ -11,6 +11,10 @@
   const CARDS = window.QNT_DECK || [];
   const POSITIONS = ["Past", "Present", "Future"];
 
+  // The card currently lifted to the front by a tap (see tap-to-peek below) —
+  // declared early so stage resets can clear it.
+  let peekedCard = null;
+
   // ── Audio (pre-loaded, cloneable so overlapping plays work) ──
   const sfxShuffle = new Audio('/static/assets/sfx-shuffle.mp3');
   const sfxDraw    = new Audio('/static/assets/sfx-draw.mp3');
@@ -47,6 +51,7 @@
   const actions    = document.getElementById('readingActions');
   const againBtn   = document.getElementById('againBtn');
   const readingSec = document.getElementById('reading');
+  const peekHint   = document.getElementById('peekHint');
 
   const wait = ms => new Promise(r => setTimeout(r, ms));
 
@@ -82,7 +87,7 @@
     return el;
   };
 
-  const clearStage = () => { stage.innerHTML = ''; };
+  const clearStage = () => { resetPeek(); stage.innerHTML = ''; };
 
   const dealCards = async (cards) => {
     cards.forEach((c) => {
@@ -199,6 +204,43 @@
     return drawn;
   };
 
+  // ── Tap-to-peek ──────────────────────────────────────────────────────────
+  // On narrow screens the three drawn cards sit close enough to overlap, and
+  // whichever card is behind is covered by its neighbours — hiding its face.
+  // Tapping a revealed card lifts it clear to the front so its name + keywords
+  // are readable; tapping it again (or another card) settles it back down.
+  //
+  // Card transforms are written inline (and include rotateY(180deg) once
+  // flipped), so peek composes onto the stored resting transform instead of
+  // clobbering it.
+  const PEEK_TRANSITION =
+    'transform .5s cubic-bezier(.5,.05,.3,1), box-shadow .5s ease, opacity .4s ease';
+  const PEEK_LIFT = ' translateY(-30px) scale(1.06)';
+
+  const resetPeek = () => {
+    if (!peekedCard) return;
+    const c = peekedCard;
+    if (c.isConnected) {
+      c.style.transition = PEEK_TRANSITION;
+      c.style.transform = c.dataset.restTransform || c.style.transform;
+      c.style.zIndex = c.dataset.baseZ || '80';
+      c.classList.remove('peeked');
+      c.setAttribute('aria-pressed', 'false');
+    }
+    peekedCard = null;
+  };
+
+  const togglePeek = (card) => {
+    if (peekedCard === card) { resetPeek(); return; }
+    resetPeek();
+    card.style.transition = PEEK_TRANSITION;
+    card.style.transform = (card.dataset.restTransform || card.style.transform) + PEEK_LIFT;
+    card.style.zIndex = '300';
+    card.classList.add('peeked');
+    card.setAttribute('aria-pressed', 'true');
+    peekedCard = card;
+  };
+
   const revealThree = async (drawn) => {
     const pool = [...CARDS].sort(() => Math.random() - .5).slice(0, NUM_DRAW);
     const spread = Math.min(200, window.innerWidth * 0.20);
@@ -217,11 +259,47 @@
       c.style.transition = 'transform .9s cubic-bezier(.5,.05,.3,1)';
       c.style.transform = `translate3d(${pos * spread}px, 0, 0) rotateY(180deg)`;
       c.classList.add('flipped');
+
+      // Remember the resting transform + layer so peek can compose onto them
+      // and restore cleanly, then make the revealed card tappable (mouse +
+      // touch) and keyboard-reachable.
+      c.dataset.restTransform = c.style.transform;
+      c.dataset.baseZ = c.style.zIndex || String(80 + i);
+      c.setAttribute('role', 'button');
+      c.setAttribute('tabindex', '0');
+      c.setAttribute('aria-pressed', 'false');
+      c.setAttribute('aria-label',
+        `${POSITIONS[i]} card — ${pool[i].name}. Tap to bring to the front.`);
+
+      if (!c.dataset.peekBound) {
+        c.dataset.peekBound = '1';
+        c.addEventListener('click', (e) => {
+          e.stopPropagation();
+          togglePeek(c);
+        });
+        c.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            togglePeek(c);
+          }
+        });
+      }
+
       await wait(700);
     }
     // Clear the transient caption once the spread is revealed
     caption.style.opacity = 0;
     setTimeout(() => { caption.textContent = ''; }, 250);
+
+    // Only advertise tap-to-peek when the three drawn cards actually overlap.
+    // Card width is fixed (160px) while the spread scales with the viewport, so
+    // a narrow screen is exactly when a face can be covered by its neighbour.
+    if (peekHint) {
+      const cardW = drawn[0] ? drawn[0].getBoundingClientRect().width : 160;
+      const overlaps = Math.abs(spread) < cardW;
+      peekHint.classList.toggle('show', overlaps);
+    }
 
     // Populate the interpretation panel with the drawn cards' meanings
     meanings.innerHTML = pool.map((card, i) => `
@@ -245,6 +323,7 @@
     actions.classList.remove('show');
     meanings.classList.remove('show');
     meanings.innerHTML = '';
+    if (peekHint) peekHint.classList.remove('show');
     caption.style.opacity = 0;
     caption.textContent = '';
 

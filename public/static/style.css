@@ -408,6 +408,41 @@ h1 .welcome{
 }
 .card.faded{ opacity: 0 !important; pointer-events:none; }
 
+/* Tap-to-peek — on narrow screens the three drawn cards overlap, so a revealed
+   card can be tapped to lift it clear to the front and read its face.
+   The transform itself is composed inline in app.js (it must preserve the
+   card's rotateY flip); CSS only handles affordance + highlight here. */
+.card.flipped{
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.card.flipped.peeked .face.front{
+  box-shadow:
+    0 34px 64px rgba(46,61,47,.34),
+    0 0 0 1px rgba(201,166,104,.8) inset,
+    0 0 0 6px #2e3d2f inset,
+    0 0 0 7px rgba(201,166,104,.6) inset;
+}
+.card.flipped:focus-visible{
+  outline: 2px solid var(--gold);
+  outline-offset: 6px;
+  border-radius: 14px;
+}
+
+/* Peek affordance hint — shown only when the drawn cards actually overlap */
+.peek-hint{
+  margin-top: 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: .35em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  opacity: 0;
+  transition: opacity .6s .3s;
+}
+.peek-hint.show{ opacity: 1; }
+
 .card .position-label{
   position: absolute;
   top: -34px; left: 0; right: 0;
