@@ -1,1 +1,569 @@
-h1 { font-family: Arial, Helvetica, sans-serif; }
+/* ==========================================================================
+   Dr. Tashema — Quantum Developmental Tools
+   Recreated from the Genspark Design handoff (high-fidelity).
+   Design tokens, spacing, easing and card geometry per the handoff README.
+   ========================================================================== */
+
+:root{
+  --ivory-0:  #f7f2e8;
+  --ivory-1:  #efe8d8;
+  --forest:   #2e3d2f;
+  --forest-2: #445443;
+  --sage:     #8a9a86;
+  --gold:     #b58f4a;
+  --gold-soft:#c9a668;
+  --gold-hair:rgba(181,143,74,.35);
+  --ink:      #2e3d2f;
+  --ink-soft: rgba(46,61,47,.72);
+  --ink-faint:rgba(46,61,47,.5);
+}
+*{ box-sizing:border-box; margin:0; padding:0; }
+html{ height:100%; background: var(--ivory-0); scroll-behavior: smooth; }
+body{
+  min-height:100%;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--ink);
+  position:relative;
+  background: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Background image — fixed, spans the whole page */
+.atmos{
+  position: fixed; inset: 0;
+  background: url("/static/assets/hero-ivory.jpg") center/cover no-repeat;
+  z-index: 0;
+}
+/* Very light soft overlay to unify the two sections */
+.atmos-wash{
+  position: fixed; inset: 0; z-index: 1; pointer-events:none;
+  background: linear-gradient(180deg,
+    rgba(247,242,232,.10) 0%,
+    rgba(247,242,232,.35) 50%,
+    rgba(247,242,232,.55) 100%);
+}
+
+/* Content sits above atmosphere */
+.page{ position: relative; z-index: 2; }
+
+/* ── HERO — centered product-shot composition ─────────────────── */
+.hero{
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px clamp(24px, 4vw, 64px);
+  gap: clamp(32px, 5vw, 72px);
+  position: relative;
+}
+
+.hero-copy{
+  flex: 0 1 auto;
+  max-width: 480px;
+}
+.eyebrow{
+  display:inline-flex; align-items:center; gap: 14px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 10.5px;
+  letter-spacing: .5em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 36px;
+  opacity: 0; animation: rise 1s ease .1s forwards;
+}
+.eyebrow::before{
+  content:""; width: 36px; height: 1px;
+  background: var(--gold-hair);
+}
+
+h1{
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(38px, 5vw, 68px);
+  line-height: 1.08;
+  letter-spacing: -.02em;
+  color: var(--forest);
+  margin: 0;
+  opacity: 0; animation: rise 1.2s ease .3s forwards;
+  text-wrap: balance;
+}
+h1 .welcome{
+  display: block;
+  font-size: .32em;
+  font-weight: 300;
+  letter-spacing: .05em;
+  color: var(--ink-soft);
+  margin-bottom: 20px;
+}
+
+.sub{
+  margin: 32px 0 0;
+  max-width: 42ch;
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(15px, 1.2vw, 17px);
+  line-height: 1.7;
+  color: var(--ink-soft);
+  opacity: 0; animation: rise 1.2s ease .5s forwards;
+  text-wrap: pretty;
+}
+
+.cta-wrap{
+  margin-top: 48px;
+  display: inline-block;
+  opacity: 0; animation: rise 1.2s ease .7s forwards;
+}
+.cta{
+  display:inline-flex; align-items:center; gap:16px;
+  padding: 16px 32px 16px 36px;
+  border-radius: 999px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 16px;
+  letter-spacing: .01em;
+  color: var(--forest);
+  background: rgba(255,255,255,.5);
+  border: 1px solid var(--gold);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.6) inset,
+    0 8px 24px rgba(46,61,47,.12);
+  text-decoration:none;
+  cursor:pointer;
+  transition: all .4s ease;
+}
+.cta:hover{
+  background: var(--forest);
+  color: var(--ivory-0);
+  border-color: var(--forest);
+}
+.cta:hover .arrow{ color: var(--gold-soft); border-color: var(--gold-soft); transform: translateY(2px); }
+.cta .arrow{
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 1px solid var(--gold);
+  display:inline-flex; align-items:center; justify-content:center;
+  font-family: 'Inter', sans-serif; font-style: normal;
+  font-size: 12px;
+  color: var(--gold);
+  transition: all .4s;
+}
+
+/* ── HERO DECK — the "product shot" ─────────────────── */
+.hero-deck{
+  position: relative;
+  flex: 0 0 auto;
+  width: clamp(280px, 34vw, 400px);
+  aspect-ratio: 3 / 4;
+  display:flex; align-items:center; justify-content:center;
+  opacity: 0; animation: rise 1.4s ease .9s forwards;
+}
+/* soft ground shadow beneath the deck */
+.hero-deck::after{
+  content:"";
+  position:absolute; left: 50%; bottom: 6%;
+  width: 68%; height: 22px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(46,61,47,.35), transparent 70%);
+  filter: blur(14px);
+  z-index: 0;
+}
+
+.hero-deck .stack{
+  position: relative;
+  width: 78%;
+  aspect-ratio: 2 / 3;
+  transform: rotate(-5deg);
+  transition: transform 1s cubic-bezier(.4,.1,.3,1);
+  z-index: 1;
+}
+.hero-deck:hover .stack{ transform: rotate(-2deg) translateY(-8px); }
+
+.hero-deck .stack-card{
+  position: absolute; inset: 0;
+  border-radius: 16px;
+  background: #2e3d2f;
+  box-shadow:
+    0 30px 60px rgba(46,61,47,.28),
+    0 12px 24px rgba(46,61,47,.18),
+    0 0 0 1px rgba(181,143,74,.5) inset,
+    0 0 0 8px #2e3d2f inset,
+    0 0 0 9px rgba(181,143,74,.35) inset;
+}
+.hero-deck .stack-card:nth-child(1){ transform: translate(-18px, -12px) rotate(-7deg); opacity: .55; }
+.hero-deck .stack-card:nth-child(2){ transform: translate(-9px, -6px) rotate(-3deg); opacity: .82; }
+.hero-deck .stack-card:nth-child(3){ transform: translate(0, 0); }
+.hero-deck .stack-card .art{
+  position:absolute; inset: 9px;
+  background: url("/static/assets/card-back.jpg") center/cover no-repeat;
+  border-radius: 10px;
+}
+
+/* scroll hint below hero */
+.scroll-hint{
+  position: absolute;
+  bottom: 32px; left: 50%; transform: translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 9px; font-weight:400;
+  letter-spacing: .4em; text-transform: uppercase;
+  color: var(--ink-faint);
+  opacity: 0; animation: rise 1.4s ease 1.2s forwards, bob 3s ease-in-out infinite 2.5s;
+}
+.scroll-hint::after{
+  content:""; width: 1px; height: 32px;
+  background: linear-gradient(180deg, var(--gold-hair), transparent);
+}
+@keyframes bob{
+  0%,100% { transform: translate(-50%, 0); }
+  50%     { transform: translate(-50%, 6px); }
+}
+
+@keyframes rise{
+  from{ opacity:0; transform: translateY(16px); }
+  to  { opacity:1; transform: translateY(0); }
+}
+
+/* ── READING SECTION — pure white stage ─────────────────── */
+.reading-section{
+  min-height: 100vh;
+  padding: 100px clamp(24px, 5vw, 80px);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  text-align:center;
+  position: relative;
+  background: #ffffff;
+  /* solid so it fully covers the ivory/sage atmosphere behind */
+}
+.reading-eyebrow{
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 10.5px;
+  letter-spacing: .5em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+.reading-title{
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(28px, 3.6vw, 44px);
+  line-height: 1.2;
+  color: var(--forest);
+  max-width: 22ch;
+  margin-bottom: 60px;
+  letter-spacing: -.01em;
+}
+
+/* Deck stage */
+.deck-stage{
+  position: relative;
+  width: min(760px, 90vw); height: 360px;
+  perspective: 1600px;
+}
+/* Idle state — the pre-fanned deck is clickable and hoverable */
+.deck-stage.idle{ cursor: pointer; }
+.deck-stage.idle .card{
+  transition: transform .6s cubic-bezier(.5,.05,.3,1), opacity .4s ease;
+}
+.deck-stage.idle:hover .card{
+  /* subtle rise + slight arc expansion on hover */
+  --hover-lift: -12px;
+}
+.card{
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 160px; height: 250px;
+  margin-left: -80px; margin-top: -125px;
+  border-radius: 11px;
+  transform-style: preserve-3d;
+  transform: translate3d(0,0,0);
+  transition: transform .6s cubic-bezier(.7,.1,.3,1), opacity .4s ease;
+  will-change: transform;
+}
+.card .face{
+  position:absolute; inset:0; border-radius:12px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+}
+.card .face.back{
+  background: #2e3d2f;   /* matches the artwork bg so any border area blends */
+  box-shadow:
+    0 20px 40px rgba(46,61,47,.25),
+    0 0 0 1px rgba(181,143,74,.5) inset,
+    0 0 0 6px #2e3d2f inset,
+    0 0 0 7px rgba(181,143,74,.35) inset;
+}
+.card .face.back .art{
+  position: absolute; inset: 7px;   /* sit just inside the gold hairline */
+  background: url("/static/assets/card-back.jpg") center/cover no-repeat;
+  border-radius: 6px;
+}
+.card .face.front{
+  transform: rotateY(180deg);
+  background: #2e3d2f;                     /* matches the card back */
+  color: var(--gold-soft);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding: 22px 18px;
+  text-align:center;
+  box-shadow:
+    0 24px 44px rgba(46,61,47,.28),
+    0 0 0 1px rgba(201,166,104,.55) inset,
+    0 0 0 6px #2e3d2f inset,
+    0 0 0 7px rgba(201,166,104,.45) inset;
+}
+.card .back-pattern{
+  position:absolute; inset: 14px;
+  border: 1px solid rgba(181,143,74,.4);
+  border-radius: 6px;
+  display:flex; align-items:center; justify-content:center;
+}
+.card .sigil{
+  width: 78px; height: 78px;
+  color: rgba(201,166,104,.9);
+}
+.card .corner{
+  position:absolute; font-family:'Fraunces',serif; font-style:italic;
+  font-size: 11px; color: rgba(201,166,104,.6); letter-spacing:.1em;
+}
+.card .corner.tl{ top: 10px; left: 12px; }
+.card .corner.br{ bottom: 10px; right: 12px; transform: rotate(180deg); }
+
+/* PDF-style card face: green bg, gold serif, centered rhythm */
+.card .front-num{
+  font-family:'Fraunces',serif;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: .05em;
+  color: rgba(201,166,104,.7);
+  line-height: 1;
+  margin-bottom: 10px;
+}
+/* Small-caps label like "KEYWORDS" / "NAME" with tiny sparkle-dash flanks */
+.card .front-label{
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px;
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 10.5px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  margin-bottom: 8px;
+}
+.card .front-label::before,
+.card .front-label::after{
+  content: "✦··";
+  letter-spacing: .1em;
+  font-size: 8px;
+  opacity: .75;
+}
+.card .front-label::after{ content: "··✦"; }
+
+.card .front-kw{
+  font-family:'Fraunces',serif;
+  font-weight: 400;
+  font-size: 9.5px;
+  line-height: 1.5;
+  color: var(--gold-soft);
+  padding: 0 4px;
+  text-wrap: balance;
+}
+
+/* Filigree divider between KEYWORDS and NAME */
+.card .front-divider{
+  display:flex; align-items:center; justify-content:center;
+  gap: 6px;
+  margin: 10px 0;
+  color: rgba(201,166,104,.65);
+}
+.card .front-divider .line{
+  width: 32px; height: 1px;
+  background: linear-gradient(90deg, transparent, currentColor);
+}
+.card .front-divider .line.r{
+  background: linear-gradient(90deg, currentColor, transparent);
+}
+.card .front-divider .diamond{
+  font-size: 8px;
+  letter-spacing: .2em;
+}
+
+.card .front-name{
+  font-family:'Fraunces',serif;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--gold-soft);
+  padding: 0 4px;
+  text-wrap: balance;
+}
+.card.faded{ opacity: 0 !important; pointer-events:none; }
+
+.card .position-label{
+  position: absolute;
+  top: -34px; left: 0; right: 0;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: .4em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0;
+  transition: opacity .6s .2s;
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+  pointer-events: none;
+}
+.card.flipped .position-label{ opacity: 1; }
+
+.deck-hint{
+  margin-top: 32px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  letter-spacing: .35em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  opacity: 0;
+  transition: opacity .5s;
+}
+.deck-hint.show{
+  opacity: 1;
+  animation: hint-pulse 3s ease-in-out infinite 1s;
+}
+@keyframes hint-pulse{
+  0%,100% { opacity: .55; }
+  50%     { opacity: 1; }
+}
+
+.reading-caption{
+  margin-top: 32px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(15px, 1.4vw, 19px);
+  color: var(--ink-soft);
+  max-width: 32ch;
+  line-height: 1.6;
+  min-height: 2.4em;
+  transition: opacity .5s;
+}
+/* Interpretation panel — the three revealed meanings, side by side */
+.reading-meanings{
+  margin-top: 60px;
+  max-width: 1000px; width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  opacity: 0;
+  transition: opacity .8s .2s;
+}
+.reading-meanings.show{ opacity: 1; }
+.meaning-cell{
+  text-align: center;
+  padding: 0 8px;
+}
+.meaning-cell .m-pos{
+  font-family: 'Inter', sans-serif;
+  font-size: 10px; letter-spacing: .5em; text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 12px;
+}
+.meaning-cell .m-name{
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 20px;
+  color: var(--forest);
+  margin-bottom: 16px;
+  letter-spacing: -.005em;
+}
+.meaning-cell .m-text{
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(46,61,47,.75);
+  text-wrap: pretty;
+}
+@media (max-width: 820px){
+  .reading-meanings{ grid-template-columns: 1fr; gap: 32px; }
+}
+
+.reading-actions{
+  margin-top: 48px;
+  display:flex; gap: 14px;
+  opacity: 0;
+  transition: opacity .6s .3s;
+  pointer-events: none;
+}
+.reading-actions.show{ opacity: 1; pointer-events: auto; }
+.reading-btn{
+  padding: 12px 26px;
+  border-radius: 999px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--forest);
+  background: rgba(255,255,255,.4);
+  border: 1px solid var(--gold);
+  cursor: pointer;
+  transition: all .3s;
+  backdrop-filter: blur(6px);
+}
+.reading-btn:hover{
+  background: var(--forest);
+  color: var(--ivory-0);
+  border-color: var(--forest);
+}
+
+@media (max-width: 780px){
+  .hero{
+    flex-direction: column;
+    padding: 60px 24px;
+    gap: 40px;
+    text-align: center;
+  }
+  .hero-copy{
+    text-align: center;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  /* Match the eyebrow decoration on BOTH sides when centered */
+  .eyebrow::after{
+    content:""; width: 36px; height: 1px;
+    background: var(--gold-hair);
+  }
+  .sub{ margin-left: auto; margin-right: auto; }
+  .hero-deck{ width: 220px; }
+  .scroll-hint{ display: none; }
+}
+
+/* Quality floor — keyboard focus + reduced motion */
+.cta:focus-visible,
+.reading-btn:focus-visible,
+.deck-stage.idle:focus-visible{
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+@media (prefers-reduced-motion: reduce){
+  *,
+  *::before,
+  *::after{
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  html{ scroll-behavior: auto; }
+}
