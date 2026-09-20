@@ -1,6 +1,6 @@
 # Dr. Tashema — Quantum Developmental Tools
 
-A quiet, editorial marketing site for **Dr. Tashema's Quantum Developmental Tools** deck. The hero introduces the deck as a product shot; below it, a free three-card reading lets visitors shuffle a fanned deck and auto-draw **Past · Present · Future**, each card flipping to reveal one of the 78 *Quantum Navigational Tools* cards with its full meaning. From there, a chat room — **QSyrii** — lets visitors ask questions about their own three cards by typing or speaking, with replies they can have read aloud.
+A quiet, editorial marketing site for **Dr. Tashema's Quantum Developmental Tools** deck. The hero introduces the deck as a product shot; below it, a free reading lets visitors choose how many cards to pull (**1, 2, or 3**), then shuffle a fanned deck and watch only their cards come forward — each flipping to reveal one of the 78 *Quantum Navigational Tools* cards with its full meaning. From there, a chat room — **QSyrii** — lets visitors ask questions about their own cards by typing or speaking, with replies they can have read aloud.
 
 The landing and reading experience was recreated from the Genspark Design handoff (`designer2-cf4103bf-327e-4f8c-82b4-b9be8a9227a6`) at **high fidelity** — colors, spacing, easing curves, sound volumes and card-face layout match the handoff README.
 
@@ -22,11 +22,13 @@ The landing and reading experience was recreated from the Genspark Design handof
 ### Reading Room — "the reading room"
 Pure-white section, deliberately breaking from the ivory atmosphere above.
 - **Idle fan**: 10 card backs animate in on load in a wide U-shaped arc; the stage is clickable and keyboard-focusable.
-- **Sequence**: gather → riffle ×2 (with shuffle SFX) → fan out → auto-pick 3 → reveal with a flip and draw SFX.
-- **Reveal**: each card shows number, name, filigree divider, and keywords; a Past/Present/Future label floats above.
-- **Tap-to-peek**: on narrow screens the three drawn cards overlap and a card's face can be covered. Tapping (or Enter/Space on) a revealed card lifts it clear to the front so its name + keywords are readable; tapping again settles it back. A hint line appears only when the cards actually overlap.
-- **Interpretation grid**: three columns (position / card name / full meaning), fading in after the reveal.
-- **Draw Another** button resets to the idle fan and runs a fresh reading.
+- **Pull pills**: three buttons under the reading title — **Pull 1 card / Pull 2 cards / Pull 3 cards** (3 is pre-selected). Clicking one sets the draw size and runs the reading, so the visitor decides how many cards they pull.
+- **Sequence**: gather → riffle ×2 (with shuffle SFX) → fan out → lift the chosen cards → **the fan clears in the same beat the picks travel forward**, so no stray cards are ever left visible behind the ones being drawn → reveal with a flip and draw SFX.
+- **Reveal**: each card shows number, name, filigree divider, and keywords; a position label floats above.
+- **Positions by pull size**: 1 card → *Guidance*; 2 cards → *Present · Future*; 3 cards → *Past · Present · Future*. The interpretation grid matches the pull size and collapses to one column on narrow screens.
+- **Tap-to-peek**: on narrow screens drawn cards overlap and a card's face can be covered. Tapping (or Enter/Space on) a revealed card lifts it clear to the front so its name + keywords are readable; tapping again settles it back. A hint line appears only when the cards actually overlap.
+- **Interpretation grid**: one column per drawn card (position / card name / full meaning), fading in after the reveal.
+- **Draw Another** button resets to the idle fan and re-runs a pull at the same size.
 
 ### Chat room — QSyrii (`/chat`)
 A calm, ChatGPT-style conversation surface dressed in the same ivory / forest / gold system.
@@ -59,7 +61,7 @@ A calm, ChatGPT-style conversation surface dressed in the same ivory / forest / 
 - **Data models**: 78-card static deck array — each `{ n, num, name, kw, meaning }`.
 - **Deck single source of truth**: `public/static/deck-data.js` is canonical; `npm run deck:gen` regenerates both the browser copy and the Worker's `src/deck.ts` from it, so prompt context and UI can never drift.
 - **Storage services**: **none** — no database. The deck is static content; the visitor's three drawn cards live in `sessionStorage` (`qnt_drawn_v1`) and are sent with each chat request.
-- **Data flow**: server renders HTML shells (Hono) → `deck-data.js` provides the deck → `app.js` drives the shuffle/fan/draw animation client-side → `rememberReading()` stores the three cards → `/chat` reads them back and `POST /api/chat` injects them into the system prompt.
+- **Data flow**: server renders HTML shells (Hono) → `deck-data.js` provides the deck → `app.js` drives the shuffle/fan/pull animation client-side → `rememberReading()` stores the drawn cards (with their position labels) → `/chat` reads them back and `POST /api/chat` injects them into the system prompt.
 - **Randomness**: each reading samples 3 unique cards via `[...CARDS].sort(() => Math.random() - .5).slice(0, 3)`.
 - **Secrets**: `OPENAI_API_KEY` / `OPENAI_BASE_URL` (required for chat) and optionally `ELEVENLABS_API_KEY` / `ELEVENLABS_VOICE_ID` (for the ElevenLabs voice). Locally in `.dev.vars` (gitignored); in production as Worker secrets. Keys never reach the browser.
 
@@ -106,10 +108,10 @@ The card back and hero atmosphere are **user-supplied final brand assets** (do n
 ## User guide
 
 1. Open the site — the hero introduces the deck.
-2. Click **Get a Free Card Reading** (or click the fanned deck) to begin.
-3. A three-card reading is drawn automatically: **Past · Present · Future**. Each card flips to reveal its name and keywords.
-4. Read the three interpretations below the cards.
-5. Open the chat room — your three cards are already in context, shown in a strip at the top.
+2. Click **Get a Free Card Reading** — the page glides down to the cards. This does **not** start the shuffle; you choose the pull size once you arrive.
+3. Choose **Pull 1 card**, **Pull 2 cards**, or **Pull 3 cards**. The deck shuffles, fans out, and only the cards you asked for come forward — the rest of the fan disappears as they rise.
+4. Each drawn card flips to reveal its name and keywords. Read the interpretations below the cards.
+5. Open the chat room — your cards are already in context, shown in a strip at the top.
 6. **Chat mode**: type a question, or tap the **mic** to dictate it. **Speak mode** (toggle at the top): tap the orb, speak, and your question sends itself.
 7. Tap **Listen** on a reply — or turn on **Read replies aloud** in the `+` menu — to hear it spoken.
 8. Click **Draw Another** for a new reading — the chat will pick up the new cards.

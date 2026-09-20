@@ -47,10 +47,16 @@
       if (!raw) return []
       const parsed = JSON.parse(raw)
       if (!Array.isArray(parsed)) return []
+      const fallback = ['Past', 'Present', 'Future']
       return parsed
         .slice(0, 3)
         .map((d, i) => ({
-          position: ['Past', 'Present', 'Future'][i],
+          // Keep the position the reading page chose — a 1-card pull is
+          // "Guidance", a 2-card pull is Present/Future.
+          position:
+            typeof d?.position === 'string' && d.position.trim()
+              ? d.position.trim()
+              : fallback[i] || 'Card',
           n: Number(d && d.n),
           name: typeof d?.name === 'string' ? d.name : '',
           kw: typeof d?.kw === 'string' ? d.kw : '',

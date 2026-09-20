@@ -6,10 +6,37 @@
    ========================================================================== */
 (() => {
   const NUM_SHUFFLE_CARDS = 10;
-  const NUM_DRAW = 3;
+  const DEFAULT_DRAW = 3;
 
   const CARDS = window.QNT_DECK || [];
-  const POSITIONS = ["Past", "Present", "Future"];
+
+  // How many cards the visitor asked for (chosen with the pull pills), and what
+  // each position is called for that size of spread.
+  let drawCount = DEFAULT_DRAW;
+  const POSITIONS_BY_COUNT = {
+    1: ['Guidance'],
+    2: ['Present', 'Future'],
+    3: ['Past', 'Present', 'Future'],
+  };
+  const positionsFor = (n) => POSITIONS_BY_COUNT[n] || POSITIONS_BY_COUNT[3];
+
+  // How far apart the drawn cards sit, given how many there are.
+  const cardSpread = (count) =>
+    count <= 1 ? 0 : Math.min(210, window.innerWidth * 0.22);
+
+  // Choose `count` evenly-spaced cards out of the fanned spread.
+  const pickEvenly = (n, count) => {
+    const out = [];
+    for (let k = 0; k < count; k++) {
+      const frac = count === 1 ? 0.5 : (k + 1) / (count + 1);
+      out.push(Math.min(n - 1, Math.max(0, Math.round(frac * (n - 1)))));
+    }
+    const unique = [...new Set(out)].sort((a, b) => a - b);
+    for (let i = 0; unique.length < count && i < n; i++) {
+      if (!unique.includes(i)) unique.push(i);
+    }
+    return unique.slice(0, count).sort((a, b) => a - b);
+  };
 
   // The card currently lifted to the front by a tap (see tap-to-peek below) —
   // declared early so stage resets can clear it.
@@ -52,6 +79,7 @@
   const againBtn   = document.getElementById('againBtn');
   const readingSec = document.getElementById('reading');
   const peekHint   = document.getElementById('peekHint');
+  const pillsWrap  = document.getElementById('drawPills');
 
   const wait = ms => new Promise(r => setTimeout(r, ms));
 
@@ -61,8 +89,10 @@
   const DRAWN_KEY = 'qnt_drawn_v1';
   const rememberReading = (cards) => {
     try {
-      const payload = (cards || []).slice(0, NUM_DRAW).map((c, i) => ({
-        position: POSITIONS[i],
+      const list = cards || [];
+      const pos = positionsFor(list.length);
+      const payload = list.slice(0, 3).map((c, i) => ({
+        position: pos[i] || 'Card',
         n: c.n,
         name: c.name,
         kw: c.kw,
@@ -175,50 +205,47 @@
     await wait(700);   // hold the fan a moment
   };
 
-  // Auto-pick 3 cards from the fanned spread: lift them, fade the rest
-  const autoPickThree = async (cards) => {
+  // Pick `count` cards out of the fanned spread and bring them to the front.
+  // The fan is cleared in the SAME beat the picks travel forward, so no stray
+  // cards are ever left visible behind the cards being drawn.
+  const autoPick = async (cards, count) => {
     const n = cards.length;
-    // Choose evenly-spaced indices (e.g. for 10 cards → 2, 5, 8)
-    const pickIdx = [
-      Math.floor(n * 0.2),
-      Math.floor(n * 0.5),
-      Math.floor(n * 0.8),
-    ];
+    const pickIdx = pickEvenly(n, Math.min(count, n));
     const drawn = pickIdx.map(i => cards[i]);
     const rest  = cards.filter((_, i) => !pickIdx.includes(i));
 
-    // Lift the picked cards upward slightly within the fan (highlight)
     const totalSpread = Math.min(520, window.innerWidth * 0.55);
     const stepX = totalSpread / (n - 1);
     const startX = -(totalSpread / 2);
+
+    // One brief beat: the chosen cards lift out of the fan.
     pickIdx.forEach((i, k) => {
       const c = drawn[k];
       const centerOffset = i - (n - 1) / 2;
       const x = startX + i * stepX;
       c.style.zIndex = String(80 + k);
-      c.style.transition = 'transform .6s cubic-bezier(.5,.05,.3,1)';
+      c.style.transition = 'transform .55s cubic-bezier(.5,.05,.3,1)';
       c.style.transform = `translate3d(${x}px, -40px, 0) rotate(${centerOffset * 3}deg)`;
     });
-    await wait(700);
+    await wait(550);
 
-    // Fade the rest of the fan
+    // The fan disappears and the picks travel forward together — at the same
+    // moment, so the fanned cards are never seen behind the drawn ones. The
+    // fan clears faster than the picks travel (0.28s vs 0.8s), so nothing is
+    // left sitting behind them mid-flight.
     rest.forEach(c => {
-      c.style.transition = 'transform .6s, opacity .5s';
+      c.style.transition = 'opacity .28s ease';
       c.classList.add('faded');
-      const cur = c.style.transform;
-      c.style.transform = cur + ' scale(.92)';
     });
-    await wait(500);
 
-    // Move the three picked cards to Past / Present / Future positions
-    const spread = Math.min(200, window.innerWidth * 0.20);
-    const start  = -(NUM_DRAW - 1) / 2;
+    const spread = cardSpread(count);
+    const start  = -(count - 1) / 2;
     drawn.forEach((c, i) => {
-      const pos = start + i;
-      c.style.transition = 'transform .9s cubic-bezier(.5,.05,.3,1)';
-      c.style.transform = `translate3d(${pos * spread}px, 0, 0) rotate(0deg)`;
+      c.style.zIndex = String(80 + i);
+      c.style.transition = 'transform .8s cubic-bezier(.5,.05,.3,1)';
+      c.style.transform = `translate3d(${(start + i) * spread}px, 0, 0) rotate(0deg)`;
     });
-    await wait(900);
+    await wait(820);
 
     return drawn;
   };
@@ -260,23 +287,24 @@
     peekedCard = card;
   };
 
-  const revealThree = async (drawn) => {
-    const pool = [...CARDS].sort(() => Math.random() - .5).slice(0, NUM_DRAW);
-    const spread = Math.min(200, window.innerWidth * 0.20);
-    const start  = -(NUM_DRAW - 1) / 2;
+  const reveal = async (drawn, count) => {
+    const pool = [...CARDS].sort(() => Math.random() - .5).slice(0, count);
+    const spread = cardSpread(count);
+    const start  = -(count - 1) / 2;
+    const pos    = positionsFor(count);
     for (let i = 0; i < drawn.length; i++) {
       const c = drawn[i];
-      const pos = start + i;
+      const offset = start + i;
       const oldFront = c.querySelector('.face.front');
       if (oldFront) oldFront.remove();
       const oldLabel = c.querySelector('.position-label');
       if (oldLabel) oldLabel.remove();
 
       c.insertAdjacentHTML('beforeend', cardFrontHTML(pool[i]));
-      c.insertAdjacentHTML('beforeend', `<div class="position-label">${POSITIONS[i]}</div>`);
+      c.insertAdjacentHTML('beforeend', `<div class="position-label">${pos[i]}</div>`);
       play(sfxDraw, 600);
       c.style.transition = 'transform .9s cubic-bezier(.5,.05,.3,1)';
-      c.style.transform = `translate3d(${pos * spread}px, 0, 0) rotateY(180deg)`;
+      c.style.transform = `translate3d(${offset * spread}px, 0, 0) rotateY(180deg)`;
       c.classList.add('flipped');
 
       // Remember the resting transform + layer so peek can compose onto them
@@ -288,7 +316,7 @@
       c.setAttribute('tabindex', '0');
       c.setAttribute('aria-pressed', 'false');
       c.setAttribute('aria-label',
-        `${POSITIONS[i]} card — ${pool[i].name}. Tap to bring to the front.`);
+        `${pos[i]} card — ${pool[i].name}. Tap to bring to the front.`);
 
       if (!c.dataset.peekBound) {
         c.dataset.peekBound = '1';
@@ -316,14 +344,17 @@
     // a narrow screen is exactly when a face can be covered by its neighbour.
     if (peekHint) {
       const cardW = drawn[0] ? drawn[0].getBoundingClientRect().width : 160;
-      const overlaps = Math.abs(spread) < cardW;
+      const overlaps = count > 1 && Math.abs(spread) < cardW;
       peekHint.classList.toggle('show', overlaps);
     }
 
-    // Populate the interpretation panel with the drawn cards' meanings
+    // Populate the interpretation panel with the drawn cards' meanings.
+    // Column count flows through a data attribute (not inline styles) so the
+    // narrow-screen media query can still collapse everything to one column.
+    meanings.dataset.count = String(count);
     meanings.innerHTML = pool.map((card, i) => `
       <div class="meaning-cell">
-        <div class="m-pos">${POSITIONS[i]}</div>
+        <div class="m-pos">${pos[i]}</div>
         <div class="m-name">${card.name}</div>
         <div class="m-text">${card.meaning}</div>
       </div>
@@ -384,6 +415,8 @@
   };
 
   const runReading = async () => {
+    const count = drawCount;
+
     // Leave idle state
     stage.classList.remove('idle');
     hint.classList.remove('show');
@@ -400,13 +433,24 @@
       stack = Array.from({length: NUM_SHUFFLE_CARDS}, () => makeCard());
       await dealCards(stack);
     } else {
-      // Collapse the fan back into a centered stack
+      // Collapse the fan back into a centered stack, and strip any state left
+      // over from a previous pull (revealed faces, position labels, flips,
+      // fades) so every card returns to a clean face-down back.
       setCaption('Gathering the deck…');
       stack.forEach((c, i) => {
+        c.querySelector('.face.front')?.remove();
+        c.querySelector('.position-label')?.remove();
+        c.classList.remove('faded', 'flipped', 'peeked');
+        c.removeAttribute('role');
+        c.removeAttribute('tabindex');
+        c.removeAttribute('aria-label');
+        c.removeAttribute('aria-pressed');
+        delete c.dataset.restTransform;
+        delete c.dataset.baseZ;
         c.style.transition = 'transform .5s cubic-bezier(.7,.1,.3,1)';
         c.style.transform = `translate3d(0, ${-i*0.6}px, ${i*0.4}px) rotate(0deg)`;
-        c.classList.remove('faded');
         c.style.opacity = '1';
+        c.style.zIndex = String(i);
       });
       await wait(550);
     }
@@ -418,11 +462,15 @@
     setCaption('Spreading the deck…');
     await fanOut(stack);
 
-    setCaption('Three cards call to you…');
-    const drawn = await autoPickThree(stack);
-    await wait(300);
+    setCaption(
+      count === 1 ? 'One card calls to you…' :
+      count === 2 ? 'Two cards call to you…' :
+                    'Three cards call to you…'
+    );
+    const drawn = await autoPick(stack, count);
+    await wait(200);
 
-    await revealThree(drawn);
+    await reveal(drawn, count);
   };
 
   // Unlock audio on user gesture: prime both clips silently
@@ -440,19 +488,29 @@
     if (running) return;
     running = true;
     unlockAudio();
+    setPillsDisabled(true);
     if (scroll) {
       const y = readingSec.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({ top: y, behavior: 'smooth' });
       await wait(900);
     }
     await runReading();
+    setPillsDisabled(false);
     running = false;
   };
 
-  // CTA button → smooth-scroll then start
+  // CTA button → glide down to the cards only. It deliberately does NOT start
+  // the shuffle: the visitor chooses how many cards to pull once they arrive.
   cta.addEventListener('click', (e) => {
     e.preventDefault();
-    triggerReading({ scroll: true });
+    const y = readingSec.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: y, behavior: 'smooth' });
+    if (pillsWrap) {
+      setTimeout(() => {
+        pillsWrap.classList.add('nudge');
+        setTimeout(() => pillsWrap.classList.remove('nudge'), 2400);
+      }, 700);
+    }
   });
 
   // Clicking the fanned deck itself starts the reading (only when idle)
@@ -463,7 +521,7 @@
   // Keyboard access to the idle deck
   stage.setAttribute('tabindex', '0');
   stage.setAttribute('role', 'button');
-  stage.setAttribute('aria-label', 'Draw three cards from the deck');
+  stage.setAttribute('aria-label', 'Pull cards from the deck');
   stage.addEventListener('keydown', (e) => {
     if ((e.key === 'Enter' || e.key === ' ') && stage.classList.contains('idle')) {
       e.preventDefault();
@@ -471,7 +529,29 @@
     }
   });
 
-  // "Draw Another" → reset to idle fan, then start
+  // ── Pull pills — the visitor decides how many cards to draw ────────────
+  const pillBtns = pillsWrap ? Array.from(pillsWrap.querySelectorAll('.draw-pill')) : [];
+  const setActivePill = (count) => {
+    drawCount = count;
+    pillBtns.forEach((b) => {
+      const on = Number(b.dataset.count) === count;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+  };
+  const setPillsDisabled = (on) => pillBtns.forEach((b) => { b.disabled = on; });
+
+  pillBtns.forEach((b) => {
+    b.addEventListener('click', () => {
+      if (running) return;
+      setActivePill(Number(b.dataset.count));
+      triggerReading();
+    });
+  });
+  // Reflect the default selection in the UI on load
+  setActivePill(DEFAULT_DRAW);
+
+  // "Draw Another" → reset to idle fan, then start with the same count
   againBtn.addEventListener('click', async () => {
     if (running) return;
     await setupIdleFan();

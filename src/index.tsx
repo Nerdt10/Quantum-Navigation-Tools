@@ -56,13 +56,20 @@ function sanitizeMessages(input: unknown): ChatMessage[] {
 
 function sanitizeDrawn(input: unknown): DrawnCard[] {
   if (!Array.isArray(input)) return []
-  const positions = ['Past', 'Present', 'Future']
+  const fallback = ['Past', 'Present', 'Future']
   return input
     .slice(0, 3)
     .map((d, i) => {
       const n = Number((d as any)?.n)
       if (!Number.isInteger(n) || n < 1 || n > 78) return null
-      return { position: positions[i] ?? 'Card', n }
+      // Trust the position label the reading sent (a 1-card pull is
+      // "Guidance", not "Past"), falling back to the classic three.
+      const raw = (d as any)?.position
+      const position =
+        typeof raw === 'string' && raw.trim() && raw.trim().length <= 24
+          ? raw.trim()
+          : fallback[i] ?? 'Card'
+      return { position, n }
     })
     .filter((d): d is DrawnCard => d !== null)
 }

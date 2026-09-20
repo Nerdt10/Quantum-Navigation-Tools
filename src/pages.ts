@@ -74,8 +74,14 @@ ${head({
     <div class="reading-eyebrow">✦ Your Reading ✦</div>
     <h2 class="reading-title">Three cards, drawn quietly, in the language of the field.</h2>
 
+    <div class="draw-pills" id="drawPills" role="group" aria-label="Choose how many cards to pull">
+      <button class="draw-pill" type="button" data-count="1" aria-pressed="false">Pull 1 card</button>
+      <button class="draw-pill" type="button" data-count="2" aria-pressed="false">Pull 2 cards</button>
+      <button class="draw-pill" type="button" data-count="3" aria-pressed="false">Pull 3 cards</button>
+    </div>
+
     <div class="deck-stage" id="deckStage"></div>
-    <div class="deck-hint" id="deckHint">Click the deck — or the button above — to begin</div>
+    <div class="deck-hint" id="deckHint">Choose how many to pull — the deck is ready</div>
 
     <div class="reading-caption" id="readingCaption"></div>
 

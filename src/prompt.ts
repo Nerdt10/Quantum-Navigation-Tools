@@ -56,7 +56,7 @@ FORMAT
 
 export type DrawnCard = { position: string; n: number }
 
-const POSITION_ORDER = ['Past', 'Present', 'Future']
+const DEFAULT_POSITIONS = ['Past', 'Present', 'Future']
 
 function renderCard(position: string, card: Card): string {
   return [
@@ -68,7 +68,9 @@ function renderCard(position: string, card: Card): string {
 
 /**
  * Build the system prompt for a specific visitor's reading.
- * `drawn` is ordered Past / Present / Future as drawn.
+ * `drawn` is ordered as drawn, and each entry carries its own position label —
+ * so a one-card pull ("Guidance") and a two-card pull ("Present", "Future")
+ * are described correctly, not forced into a Past/Present/Future shape.
  */
 export function buildSystemPrompt(drawn: DrawnCard[], deck: Card[]): string {
   const byNumber = new Map(deck.map((c) => [c.n, c]))
@@ -76,31 +78,51 @@ export function buildSystemPrompt(drawn: DrawnCard[], deck: Card[]): string {
   const lines: string[] = [TASHEMA_VOICE, '', '── THE VISITOR\'S READING ──']
 
   if (drawn.length) {
-    const ordered = POSITION_ORDER.map((pos, i) => {
-      const entry = drawn[i]
-      const card = entry ? byNumber.get(entry.n) : undefined
-      return card ? renderCard(pos, card) : null
-    }).filter((l): l is string => l !== null)
+    const ordered = drawn
+      .map((entry, i) => {
+        const card = byNumber.get(entry.n)
+        if (!card) return null
+        const position = entry.position || DEFAULT_POSITIONS[i] || 'Card'
+        return renderCard(position, card)
+      })
+      .filter((l): l is string => l !== null)
 
     if (ordered.length) {
       lines.push(...ordered)
+      lines.push('')
+      if (ordered.length === 1) {
+        lines.push(
+          'The visitor pulled a single card — a card of guidance for right now.',
+          'Stay faithful to this text and treat it as one focused message rather',
+          'than a timeline.',
+        )
+      } else if (ordered.length === 2) {
+        lines.push(
+          'The visitor pulled two cards — Present and Future, a movement from',
+          'where they stand now toward what is forming.',
+        )
+      } else {
+        lines.push(
+          'The three cards are Past, Present and Future. Treat them as one story',
+          'with a movement through it, not three unrelated symbols.',
+        )
+      }
       lines.push(
-        '',
         'These are the cards the visitor drew, with their canonical meanings.',
         'Stay faithful to this text. If the visitor asks about a card they did',
         'not draw, you may explain it briefly from the deck, but keep the focus',
-        'on their own three.',
+        'on their own pull.',
       )
     } else {
       lines.push(
-        'The visitor has not completed a reading yet. Invite them to draw three',
-        'cards on the reading page, or answer general questions about the deck.',
+        'The visitor has not completed a reading yet. Invite them to pull cards',
+        'on the reading page, or answer general questions about the deck.',
       )
     }
   } else {
     lines.push(
-      'The visitor has not completed a reading yet. Invite them to draw three',
-      'cards on the reading page, or answer general questions about the deck.',
+      'The visitor has not completed a reading yet. Invite them to pull cards',
+      'on the reading page, or answer general questions about the deck.',
     )
   }
 
