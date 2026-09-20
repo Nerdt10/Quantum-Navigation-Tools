@@ -23,7 +23,8 @@ The landing and reading experience was recreated from the Genspark Design handof
 Pure-white section, deliberately breaking from the ivory atmosphere above.
 - **Idle fan**: 10 card backs animate in on load in a wide U-shaped arc; the stage is clickable and keyboard-focusable.
 - **Pull pills**: three buttons under the reading title — **Pull 1 card / Pull 2 cards / Pull 3 cards** (3 is pre-selected). Clicking one sets the draw size and runs the reading, so the visitor decides how many cards they pull.
-- **Sequence**: gather → riffle ×2 (with shuffle SFX) → fan out → lift the chosen cards → **the fan clears in the same beat the picks travel forward**, so no stray cards are ever left visible behind the ones being drawn → reveal with a flip and draw SFX.
+- **Sequence**: gather → riffle ×2 (with shuffle SFX) → fan out → **the whole fan lifts away and is removed** → only then the requested number of cards is dealt onto the empty stage → reveal with a flip and draw SFX. The fan is pure ceremony: cards are never *picked out* of it, so no fanned card can ever sit behind one being drawn.
+- **Deal-in**: the drawn cards emerge from the centre of the stage and grow outward into their spread. They deliberately do **not** drop in from above — the stage only has 35px of head-room above a resting card, so an overhead offset would render the incoming card outside the stage box, across the pull pills and the title (visible as a translucent card-shaped ghost, worst on phones).
 - **Reveal**: each card shows number, name, filigree divider, and keywords; a position label floats above.
 - **Positions by pull size**: 1 card → *Guidance*; 2 cards → *Present · Future*; 3 cards → *Past · Present · Future*. The interpretation grid matches the pull size and collapses to one column on narrow screens.
 - **Tap-to-peek**: on narrow screens drawn cards overlap and a card's face can be covered. Tapping (or Enter/Space on) a revealed card lifts it clear to the front so its name + keywords are readable; tapping again settles it back. A hint line appears only when the cards actually overlap.
@@ -109,7 +110,7 @@ The card back and hero atmosphere are **user-supplied final brand assets** (do n
 
 1. Open the site — the hero introduces the deck.
 2. Click **Get a Free Card Reading** — the page glides down to the cards. This does **not** start the shuffle; you choose the pull size once you arrive.
-3. Choose **Pull 1 card**, **Pull 2 cards**, or **Pull 3 cards**. The deck shuffles, fans out, and only the cards you asked for come forward — the rest of the fan disappears as they rise.
+3. Choose **Pull 1 card**, **Pull 2 cards**, or **Pull 3 cards**. The deck shuffles, fans out, and the entire fan then lifts away — after that, only the cards you asked for are dealt in from the centre of the stage.
 4. Each drawn card flips to reveal its name and keywords. Read the interpretations below the cards.
 5. Open the chat room — your cards are already in context, shown in a strip at the top.
 6. **Chat mode**: type a question, or tap the **mic** to dictate it. **Speak mode** (toggle at the top): tap the orb, speak, and your question sends itself.

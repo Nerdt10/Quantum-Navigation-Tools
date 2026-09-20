@@ -206,9 +206,18 @@
     await wait(120);
   };
 
-  // Deal the requested number of cards onto the now-empty stage. They arrive
-  // from above, land in their final Past / Present / Future spread, and are
-  // only then turned over by reveal().
+  // Deal the requested number of cards onto the now-empty stage. They emerge
+  // from the centre — the deck releasing its cards — grow into their final
+  // Past / Present / Future spread, and are only then turned over by reveal().
+  //
+  // They must NOT drop in from above. A card is 250px tall inside a 320px
+  // stage, so its resting top is only 35px below the stage top: there is no
+  // head-room for a real overhead offset. Any such offset (this used to be
+  // -190px) pushes the incoming card OUTSIDE the stage box, and because the
+  // stage is overflow:visible it then renders across the pull pills and the
+  // title — a translucent card-shaped ghost sweeping over the buttons, which
+  // reads as a glitch on a phone. Growing outward from the centre keeps every
+  // card inside the stage for the whole animation.
   const dealDrawn = async (count) => {
     const cards = Array.from({ length: count }, () => makeCard());
     const spread = cardSpread(count);
@@ -218,8 +227,8 @@
       c.style.transition = 'none';
       c.style.opacity = '0';
       c.style.zIndex = String(80 + i);
-      c.style.transform =
-        `translate3d(${(start + i) * spread}px, -190px, 0) rotate(0deg)`;
+      c.style.transformOrigin = 'center center';
+      c.style.transform = 'translate3d(0, 0, 0) scale(.62)';
     });
     stage.append(...cards);
     void stage.offsetWidth;   // commit the start position before animating
@@ -228,7 +237,8 @@
       const c = cards[i];
       c.style.transition = 'transform .6s cubic-bezier(.5,.05,.3,1), opacity .4s ease';
       c.style.opacity = '1';
-      c.style.transform = `translate3d(${(start + i) * spread}px, 0, 0) rotate(0deg)`;
+      c.style.transform =
+        `translate3d(${(start + i) * spread}px, 0, 0) scale(1) rotate(0deg)`;
       await wait(110);
     }
     await wait(480);
