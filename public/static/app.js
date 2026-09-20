@@ -24,20 +24,6 @@
   const cardSpread = (count) =>
     count <= 1 ? 0 : Math.min(210, window.innerWidth * 0.22);
 
-  // Choose `count` evenly-spaced cards out of the fanned spread.
-  const pickEvenly = (n, count) => {
-    const out = [];
-    for (let k = 0; k < count; k++) {
-      const frac = count === 1 ? 0.5 : (k + 1) / (count + 1);
-      out.push(Math.min(n - 1, Math.max(0, Math.round(frac * (n - 1)))));
-    }
-    const unique = [...new Set(out)].sort((a, b) => a - b);
-    for (let i = 0; unique.length < count && i < n; i++) {
-      if (!unique.includes(i)) unique.push(i);
-    }
-    return unique.slice(0, count).sort((a, b) => a - b);
-  };
-
   // The card currently lifted to the front by a tap (see tap-to-peek below) —
   // declared early so stage resets can clear it.
   let peekedCard = null;
@@ -204,53 +190,50 @@
     await wait(700);   // hold the fan a moment
   };
 
-  // Pick `count` cards out of the fanned spread and bring them to the front.
-  // The fan is cleared in the SAME beat the picks travel forward, so no stray
-  // cards are ever left visible behind the cards being drawn.
-  const autoPick = async (cards, count) => {
-    const n = cards.length;
-    const pickIdx = pickEvenly(n, Math.min(count, n));
-    const drawn = pickIdx.map(i => cards[i]);
-    const rest  = cards.filter((_, i) => !pickIdx.includes(i));
-
-    const totalSpread = Math.min(520, window.innerWidth * 0.55);
-    const stepX = totalSpread / (n - 1);
-    const startX = -(totalSpread / 2);
-
-    // One brief beat: the chosen cards lift out of the fan.
-    pickIdx.forEach((i, k) => {
-      const c = drawn[k];
-      const centerOffset = i - (n - 1) / 2;
-      const x = startX + i * stepX;
-      c.style.zIndex = String(80 + k);
-      c.style.transition = 'transform .55s cubic-bezier(.5,.05,.3,1)';
-      c.style.transform = `translate3d(${x}px, -40px, 0) rotate(${centerOffset * 3}deg)`;
+  // The fan is ceremony, not a source. After it has been shown it leaves the
+  // stage entirely: every fanned card softens and lifts away, and is then
+  // removed from the DOM. Nothing is ever picked *out* of the fan, so no card
+  // can be seen sitting behind another while the draw happens.
+  const dismissFan = async () => {
+    const cards = Array.from(stage.querySelectorAll('.card'));
+    cards.forEach((c) => {
+      c.style.transition = 'transform .45s ease, opacity .32s ease';
+      c.style.opacity = '0';
+      c.style.transform = `${c.style.transform || ''} translateY(16px) scale(.95)`;
     });
-    await wait(550);
+    await wait(340);
+    clearStage();          // fan is gone — the stage is now empty
+    await wait(120);
+  };
 
-    // The fan leaves the stage the instant the chosen cards are brought
-    // forward. This is an instant CUT, not a fade: a fade left the fan cards
-    // faintly readable for ~0.3s while the picks were already gliding forward,
-    // so you could still see the fan behind them. Cutting with no transition
-    // guarantees nothing is ever visible behind the cards being drawn.
-    rest.forEach(c => {
-      c.style.transition = 'none';
-      c.classList.add('faded');
-    });
-    // Force the browser to commit the instant change before the travel
-    // animation starts, so the two can never overlap on screen.
-    void stage.offsetWidth;
-
+  // Deal the requested number of cards onto the now-empty stage. They arrive
+  // from above, land in their final Past / Present / Future spread, and are
+  // only then turned over by reveal().
+  const dealDrawn = async (count) => {
+    const cards = Array.from({ length: count }, () => makeCard());
     const spread = cardSpread(count);
     const start  = -(count - 1) / 2;
-    drawn.forEach((c, i) => {
-      c.style.zIndex = String(80 + i);
-      c.style.transition = 'transform .8s cubic-bezier(.5,.05,.3,1)';
-      c.style.transform = `translate3d(${(start + i) * spread}px, 0, 0) rotate(0deg)`;
-    });
-    await wait(820);
 
-    return drawn;
+    cards.forEach((c, i) => {
+      c.style.transition = 'none';
+      c.style.opacity = '0';
+      c.style.zIndex = String(80 + i);
+      c.style.transform =
+        `translate3d(${(start + i) * spread}px, -190px, 0) rotate(0deg)`;
+    });
+    stage.append(...cards);
+    void stage.offsetWidth;   // commit the start position before animating
+
+    for (let i = 0; i < cards.length; i++) {
+      const c = cards[i];
+      c.style.transition = 'transform .6s cubic-bezier(.5,.05,.3,1), opacity .4s ease';
+      c.style.opacity = '1';
+      c.style.transform = `translate3d(${(start + i) * spread}px, 0, 0) rotate(0deg)`;
+      await wait(110);
+    }
+    await wait(480);
+
+    return cards;
   };
 
   // ── Tap-to-peek ──────────────────────────────────────────────────────────
@@ -463,13 +446,18 @@
     setCaption('Spreading the deck…');
     await fanOut(stack);
 
+    // Shuffle → fan → the fan leaves → only THEN do the cards appear.
+    setCaption('The deck releases its cards…');
+    await dismissFan();
+    await wait(240);
+
     setCaption(
-      count === 1 ? 'One card calls to you…' :
-      count === 2 ? 'Two cards call to you…' :
-                    'Three cards call to you…'
+      count === 1 ? 'One card emerges…' :
+      count === 2 ? 'Two cards emerge…' :
+                    'Three cards emerge…'
     );
-    const drawn = await autoPick(stack, count);
-    await wait(200);
+    const drawn = await dealDrawn(count);
+    await wait(120);
 
     await reveal(drawn, count);
   };
