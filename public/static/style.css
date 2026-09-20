@@ -35,19 +35,33 @@ body{
   -webkit-font-smoothing: antialiased;
 }
 
-/* Background image — fixed, spans the whole page */
+/* Background image — fixed, spans the whole page.
+   Softened, de-saturated and slightly enlarged so the sage watercolour reads
+   as a faint frosted texture rather than a strong green mass. */
 .atmos{
   position: fixed; inset: 0;
   background: url("/static/assets/hero-ivory.jpg") center/cover no-repeat;
   z-index: 0;
+  filter: blur(14px) saturate(.62) brightness(1.06);
+  transform: scale(1.12);
+  transform-origin: center;
 }
-/* Very light soft overlay to unify the two sections */
+/* Frosted ivory veil: heavier on the LEFT (where the green rises highest),
+   with a gentle vertical wash to unify the hero and the reading section. */
 .atmos-wash{
   position: fixed; inset: 0; z-index: 1; pointer-events:none;
-  background: linear-gradient(180deg,
-    rgba(247,242,232,.10) 0%,
-    rgba(247,242,232,.35) 50%,
-    rgba(247,242,232,.55) 100%);
+  background:
+    /* side-to-side frost bias — strongest at the left edge */
+    linear-gradient(90deg,
+      rgba(247,242,232,.66) 0%,
+      rgba(247,242,232,.48) 34%,
+      rgba(247,242,232,.26) 68%,
+      rgba(247,242,232,.12) 100%),
+    /* top-to-bottom unity wash */
+    linear-gradient(180deg,
+      rgba(247,242,232,.30) 0%,
+      rgba(247,242,232,.44) 55%,
+      rgba(247,242,232,.58) 100%);
 }
 
 /* Content sits above atmosphere */
