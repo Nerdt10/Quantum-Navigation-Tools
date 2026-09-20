@@ -141,14 +141,49 @@ ELEVENLABS_API_KEY=...
 ELEVENLABS_VOICE_ID=...
 ```
 
-## Deployment
+## Deployment — GitHub → Cloudflare Pages (Git integration)
 
-- **Platform**: Cloudflare Pages / Workers
-- **Status**: ❌ Not yet deployed (local preview verified)
-- **Build output**: `dist/` (`_worker.js` + `static/`)
-- **Config**: `wrangler.jsonc` (`pages_build_output_dir: ./dist`)
-- **Required production secrets**: `OPENAI_API_KEY`, `OPENAI_BASE_URL` (chat). Optional: `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` (voice).
-- **Last updated**: 2026-09-19
+The project is configured for Pages Git integration with automatic deployments on
+push. Connect the repo in the Cloudflare dashboard and set:
+
+| Setting | Value |
+| --- | --- |
+| **Build command** | `npm run build` |
+| **Build output directory** | `dist` |
+| **Node version** (`NODE_VERSION` env var) | `22` |
+
+There is **no `wrangler.jsonc`**. All project configuration lives in the
+Cloudflare dashboard, so the dashboard is the source of truth. A `.nvmrc`
+(`22`) is committed as a convenience, but on Pages the reliable knob is the
+`NODE_VERSION` environment variable. Vite 8 requires Node `^20.19.0 || >=22.12.0`.
+
+### The site is not purely static — it uses Pages Functions
+
+`npm run build` emits **`dist/_worker.js` plus `dist/static/`**. The worker is
+not build cruft: it backs three server routes (`/api/chat`, `/api/speak`,
+`/api/health`) and holds the API keys server-side. Cloudflare Pages detects
+`_worker.js` in the output directory and runs it automatically as a Pages
+Function (*advanced mode*). No extra configuration is needed for this — it is
+why the site works on Pages Git integration as-is.
+
+Removing the worker would break the QSyrii chat companion and the read-aloud
+voice. A plain static host (e.g. GitHub Pages) cannot run those routes at all,
+and moving the model calls into the browser would expose the API key in
+public JavaScript.
+
+### Required environment variables (Pages → Settings → Environment variables)
+
+- **`OPENAI_API_KEY`**, **`OPENAI_BASE_URL`** — required for the chat.
+- `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` — optional; enable the ElevenLabs
+  voice instead of browser speech.
+
+Set these as **encrypted** secrets in the dashboard, for both Production and
+Preview. They are never committed (`wrangler.jsonc` is gone, `.dev.vars` is
+gitignored).
+
+- **Platform**: Cloudflare Pages (Git integration + Pages Functions)
+- **Status**: ❌ Not yet connected (local preview verified)
+- **Last updated**: 2026-09-20
 
 ## Not yet implemented / next steps
 
