@@ -46,9 +46,8 @@ ${head({
       </h1>
       <div class="founder">Founder Dr. Tashema</div>
       <p class="sub">
-        A quiet space where quantum insight meets soul remembrance —
-        practices, readings, and remembrances for those learning to move
-        through the field with intention.
+        A quiet space where quantum insight meets soul remembrance for those
+        learning to move through the field with multidimensional intention.
       </p>
       <div class="cta-wrap">
         <a href="#reading" class="cta" id="ctaBtn">
