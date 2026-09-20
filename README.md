@@ -14,9 +14,9 @@ The landing and reading experience was recreated from the Genspark Design handof
 ## Features (completed)
 
 ### Hero — "the product shot"
-- Full-viewport flex layout: copy on the left (max-width 480px), a tilted stack of three overlapping card backs on the right.
+- Full-viewport flex layout: copy on the left (max-width 480px), the **product shot** on the right — the printed box next to the standing guide card on its wooden stand (`product-hero.webp`).
 - Gold-hairline eyebrow ("✦ Quantum Navigational Tools"), the headline **"Quantum Developmental Tools"**, a gold "FOUNDER DR. TASHEMA" byline, subtitle, and the pill CTA "Get a Free Card Reading ↓".
-- Orchestrated rise-in entrance (0.1s → 1.4s), hover lift on the card stack, and a bobbing "SCROLL TO RECEIVE" hint.
+- Orchestrated rise-in entrance (0.1s → 1.4s) and a bobbing "SCROLL TO RECEIVE" hint.
 - Fixed ivory watercolor atmosphere (`hero-ivory.jpg`) with a soft cream wash overlay.
 
 ### Reading Room — "the reading room"

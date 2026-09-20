@@ -181,50 +181,20 @@ h1{
 .hero-deck{
   position: relative;
   flex: 0 0 auto;
-  width: clamp(280px, 34vw, 400px);
-  aspect-ratio: 3 / 4;
+  width: clamp(300px, 38vw, 460px);
   display:flex; align-items:center; justify-content:center;
   opacity: 0; animation: rise 1.4s ease .9s forwards;
 }
-/* soft ground shadow beneath the deck */
-.hero-deck::after{
-  content:"";
-  position:absolute; left: 50%; bottom: 6%;
-  width: 68%; height: 22px;
-  transform: translateX(-50%);
-  background: radial-gradient(ellipse at center, rgba(46,61,47,.35), transparent 70%);
-  filter: blur(14px);
-  z-index: 0;
-}
-
-.hero-deck .stack{
-  position: relative;
-  width: 78%;
-  aspect-ratio: 2 / 3;
-  transform: rotate(-5deg);
-  transition: transform 1s cubic-bezier(.4,.1,.3,1);
-  z-index: 1;
-}
-.hero-deck:hover .stack{ transform: rotate(-2deg) translateY(-8px); }
-
-.hero-deck .stack-card{
-  position: absolute; inset: 0;
-  border-radius: 16px;
-  background: #2e3d2f;
-  box-shadow:
-    0 30px 60px rgba(46,61,47,.28),
-    0 12px 24px rgba(46,61,47,.18),
-    0 0 0 1px rgba(181,143,74,.5) inset,
-    0 0 0 8px #2e3d2f inset,
-    0 0 0 9px rgba(181,143,74,.35) inset;
-}
-.hero-deck .stack-card:nth-child(1){ transform: translate(-18px, -12px) rotate(-7deg); opacity: .55; }
-.hero-deck .stack-card:nth-child(2){ transform: translate(-9px, -6px) rotate(-3deg); opacity: .82; }
-.hero-deck .stack-card:nth-child(3){ transform: translate(0, 0); }
-.hero-deck .stack-card .art{
-  position:absolute; inset: 9px;
-  background: url("/static/assets/card-back.jpg") center/cover no-repeat;
-  border-radius: 10px;
+/* The product photo is a transparent cut-out (box + standing card), so it sits
+   straight on the ivory like a real product shot — no white plate behind it. */
+.hero-deck picture{ display:block; width:100%; }
+.hero-deck .product-shot{
+  display:block;
+  width: 100%;
+  height: auto;
+  /* soft ground shadow, matching the light in the photograph */
+  filter: drop-shadow(0 26px 30px rgba(46,61,47,.18))
+          drop-shadow(0 6px 10px rgba(46,61,47,.10));
 }
 
 /* scroll hint below hero */
@@ -680,7 +650,9 @@ h1{
     background: var(--gold-hair);
   }
   .sub{ margin-left: auto; margin-right: auto; }
-  .hero-deck{ width: 220px; }
+  /* The product shot is a wide 1.58:1 image, so a fixed 220px left it small
+     and lost on a phone. Scale it to the column instead. */
+  .hero-deck{ width: min(84vw, 380px); }
   .scroll-hint{ display: none; }
 }
 

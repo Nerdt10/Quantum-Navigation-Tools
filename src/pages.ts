@@ -58,11 +58,15 @@ ${head({
     </div>
 
     <div class="hero-deck" aria-hidden="true">
-      <div class="stack">
-        <div class="stack-card"><div class="art"></div></div>
-        <div class="stack-card"><div class="art"></div></div>
-        <div class="stack-card"><div class="art"></div></div>
-      </div>
+      <picture>
+        <source srcset="/static/assets/product-hero.webp" type="image/webp"/>
+        <img
+          class="product-shot"
+          src="/static/assets/product-hero.png"
+          width="876" height="556"
+          alt=""
+          decoding="async"/>
+      </picture>
     </div>
 
     <div class="scroll-hint">Scroll to receive</div>
