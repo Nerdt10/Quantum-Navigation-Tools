@@ -334,7 +334,10 @@ h1{
 /* Deck stage */
 .deck-stage{
   position: relative;
-  width: min(760px, 90vw); height: 360px;
+  /* Cards are 250px tall and vertically centred, so the box only needs a
+     little head-room for the fan arc and the pick lift. A shorter box leaves
+     noticeably less dead space below the drawn cards. */
+  width: min(760px, 90vw); height: 320px;
   perspective: 1600px;
 }
 /* Idle state — the pre-fanned deck is clickable and hoverable */
@@ -503,16 +506,20 @@ h1{
 
 /* Peek affordance hint — shown only when the drawn cards actually overlap */
 .peek-hint{
-  margin-top: 14px;
+  /* Collapsed while hidden so it never holds open space between the cards and
+     the interpretations — it only expands on the narrow screens that overlap. */
+  margin-top: 0;
+  max-height: 0;
+  overflow: hidden;
   font-family: var(--font-sans);
   font-size: 10.5px;
   letter-spacing: .16em;
   text-transform: uppercase;
   color: var(--ink-faint);
   opacity: 0;
-  transition: opacity .6s .3s;
+  transition: opacity .6s .3s, max-height .35s ease, margin-top .35s ease;
 }
-.peek-hint.show{ opacity: 1; }
+.peek-hint.show{ opacity: 1; max-height: 40px; margin-top: 14px; }
 
 .card .position-label{
   position: absolute;
@@ -533,7 +540,7 @@ h1{
 .card.flipped .position-label{ opacity: 1; }
 
 .reading-caption{
-  margin-top: 18px;
+  margin-top: 12px;
   font-family: var(--font-display);
   font-weight: 400;
   font-size: clamp(16px, 1.4vw, 19px);
@@ -543,9 +550,15 @@ h1{
   min-height: 1.6em;
   transition: opacity .5s;
 }
+/* Once the reading settles the caption is emptied — take its reserved box out
+   of the flow so it stops pushing the interpretations down. */
+.reading-caption:empty{
+  margin-top: 0;
+  min-height: 0;
+}
 /* Interpretation panel — the three revealed meanings, side by side */
 .reading-meanings{
-  margin-top: 34px;
+  margin-top: 26px;
   max-width: 1000px; width: 100%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
