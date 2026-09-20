@@ -63,7 +63,7 @@ ${head({
         <img
           class="product-shot"
           src="/static/assets/product-hero.png"
-          width="876" height="556"
+          width="870" height="551"
           alt=""
           decoding="async"/>
       </picture>
