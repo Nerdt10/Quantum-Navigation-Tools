@@ -181,7 +181,11 @@ h1{
 .hero-deck{
   position: relative;
   flex: 0 0 auto;
-  width: clamp(300px, 38vw, 460px);
+  /* Sized to hold its own against the copy column on the left. The shot is a
+     wide 1.58:1 image, so a given width buys little height — at 460px it read
+     smaller than the 480px copy block beside it. This scales it up on wide
+     screens while staying inside the flex row's spare space at mid widths. */
+  width: clamp(340px, 44vw, 620px);
   display:flex; align-items:center; justify-content:center;
   opacity: 0; animation: rise 1.4s ease .9s forwards;
 }
