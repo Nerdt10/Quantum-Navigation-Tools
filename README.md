@@ -1,6 +1,6 @@
 # Dr. Tashema — Quantum Developmental Tools
 
-A quiet, editorial marketing site for **Dr. Tashema's Quantum Developmental Tools** deck. The hero introduces the deck as a product shot; below it, a free reading lets visitors choose how many cards to pull (**1, 2, or 3**), then shuffle a fanned deck and watch only their cards come forward — each flipping to reveal one of the 78 *Quantum Navigational Tools* cards with its full meaning. From there, a chat room — **QSyrii** — lets visitors ask questions about their own cards by typing or speaking, with replies they can have read aloud.
+A quiet, editorial marketing site for **Dr. Tashema's Quantum Developmental Tools** deck. The hero introduces the deck as a product shot; below it, a free reading lets visitors choose how many cards to pull (**1, 2, or 3**), then shuffle the deck and watch only their cards come forward — each flipping to reveal one of the 78 *Quantum Navigational Tools* cards with its full meaning. From there, a chat room — **QSyrii** — lets visitors ask questions about their own cards by typing or speaking, with replies they can have read aloud.
 
 The landing and reading experience was recreated from the Genspark Design handoff (`designer2-cf4103bf-327e-4f8c-82b4-b9be8a9227a6`) at **high fidelity** — colors, spacing, easing curves, sound volumes and card-face layout match the handoff README.
 
@@ -21,15 +21,16 @@ The landing and reading experience was recreated from the Genspark Design handof
 
 ### Reading Room — "the reading room"
 Pure-white section, deliberately breaking from the ivory atmosphere above.
-- **Idle fan**: 10 card backs animate in on load in a wide U-shaped arc; the stage is clickable and keyboard-focusable.
+- **Idle deck**: 10 card backs animate in on load as a single tidy stack; the stage is clickable and keyboard-focusable.
 - **Pull pills**: three buttons under the reading title — **Pull 1 card / Pull 2 cards / Pull 3 cards** (3 is pre-selected). Clicking one sets the draw size and runs the reading, so the visitor decides how many cards they pull.
-- **Sequence**: gather → riffle ×2 (with shuffle SFX) → fan out → **the whole fan lifts away and is removed** → only then the requested number of cards is dealt onto the empty stage → reveal with a flip and draw SFX. The fan is pure ceremony: cards are never *picked out* of it, so no fanned card can ever sit behind one being drawn.
-- **Deal-in**: the drawn cards emerge from the centre of the stage and grow outward into their spread. They deliberately do **not** drop in from above — the stage only has 35px of head-room above a resting card, so an overhead offset would render the incoming card outside the stage box, across the pull pills and the title (visible as a translucent card-shaped ghost, worst on phones).
+- **Sequence**: gather → **shuffle (riffle ×2, with shuffle SFX)** → the deck lifts away and is removed → only then do the requested cards fall in → reveal with a flip and draw SFX.
+- **Shuffle**: the deck splits into two halves that tilt apart and interleave back together, card by card — run twice. This is a *riffle*, restored from version 1. There is deliberately **no fan-out / spread** and no side-to-side swaying of the whole stack: an earlier rewrite added a step that slid the entire deck left, then right, then back to centre, which read as the cards rattling side to side rather than being shuffled. That step has been removed.
+- **Pull / drop-in**: the deck leaves the stage entirely, then one card per requested pull falls **vertically** into place. The stage is 360px tall, which gives a centred card 55px of head-room above it, so the whole fall happens inside the stage box — a real geometric guarantee, not a clip. (An earlier version dropped cards from 190px above a 320px stage, so they rendered outside the box across the pull pills and the title.)
 - **Reveal**: each card shows number, name, filigree divider, and keywords; a position label floats above.
 - **Positions by pull size**: 1 card → *Guidance*; 2 cards → *Present · Future*; 3 cards → *Past · Present · Future*. The interpretation grid matches the pull size and collapses to one column on narrow screens.
 - **Tap-to-peek**: on narrow screens drawn cards overlap and a card's face can be covered. Tapping (or Enter/Space on) a revealed card lifts it clear to the front so its name + keywords are readable; tapping again settles it back. A hint line appears only when the cards actually overlap.
 - **Interpretation grid**: one column per drawn card (position / card name / full meaning), fading in after the reveal.
-- **Draw Another** button resets to the idle fan and re-runs a pull at the same size.
+- **Draw Another** button resets to the idle deck and re-runs a pull at the same size.
 
 ### Chat room — QSyrii (`/chat`)
 A calm, ChatGPT-style conversation surface dressed in the same ivory / forest / gold system.
@@ -46,7 +47,7 @@ A calm, ChatGPT-style conversation surface dressed in the same ivory / forest / 
 - **Cost control**: history is capped to the last 12 turns and 4000 chars per turn; the greeting and starter prompts render locally with no API call.
 
 ### Quality floor
-- Responsive: hero flips to a centered column at ≤780px; the meaning grid collapses to one column at ≤820px; fan spread/stage width scale with viewport.
+- Responsive: hero flips to a centered column at ≤780px; the meaning grid collapses to one column at ≤820px; the stage and card spread scale with viewport.
 - Keyboard access: focus-visible ring on the CTA, deck stage, drawn cards, and buttons; Enter/Space triggers the deck and toggles peek.
 - Honors `prefers-reduced-motion` (animations and smooth scroll reduced).
 - Guard flag prevents re-entry while a reading is in flight; audio is unlocked on the first user gesture.
@@ -62,7 +63,7 @@ A calm, ChatGPT-style conversation surface dressed in the same ivory / forest / 
 - **Data models**: 78-card static deck array — each `{ n, num, name, kw, meaning }`.
 - **Deck single source of truth**: `public/static/deck-data.js` is canonical; `npm run deck:gen` regenerates both the browser copy and the Worker's `src/deck.ts` from it, so prompt context and UI can never drift.
 - **Storage services**: **none** — no database. The deck is static content; the visitor's three drawn cards live in `sessionStorage` (`qnt_drawn_v1`) and are sent with each chat request.
-- **Data flow**: server renders HTML shells (Hono) → `deck-data.js` provides the deck → `app.js` drives the shuffle/fan/pull animation client-side → `rememberReading()` stores the drawn cards (with their position labels) → `/chat` reads them back and `POST /api/chat` injects them into the system prompt.
+- **Data flow**: server renders HTML shells (Hono) → `deck-data.js` provides the deck → `app.js` drives the shuffle/pull animation client-side → `rememberReading()` stores the drawn cards (with their position labels) → `/chat` reads them back and `POST /api/chat` injects them into the system prompt.
 - **Randomness**: each reading samples 3 unique cards via `[...CARDS].sort(() => Math.random() - .5).slice(0, 3)`.
 - **Secrets**: `OPENAI_API_KEY` / `OPENAI_BASE_URL` (required for chat) and optionally `ELEVENLABS_API_KEY` / `ELEVENLABS_VOICE_ID` (for the ElevenLabs voice). Locally in `.dev.vars` (gitignored); in production as Worker secrets. Keys never reach the browser.
 
@@ -110,7 +111,7 @@ The card back and hero atmosphere are **user-supplied final brand assets** (do n
 
 1. Open the site — the hero introduces the deck.
 2. Click **Get a Free Card Reading** — the page glides down to the cards. This does **not** start the shuffle; you choose the pull size once you arrive.
-3. Choose **Pull 1 card**, **Pull 2 cards**, or **Pull 3 cards**. The deck shuffles, fans out, and the entire fan then lifts away — after that, only the cards you asked for are dealt in from the centre of the stage.
+3. Choose **Pull 1 card**, **Pull 2 cards**, or **Pull 3 cards**. The deck gathers, shuffles (riffles twice), and then lifts away — after that, only the cards you asked for drop into place.
 4. Each drawn card flips to reveal its name and keywords. Read the interpretations below the cards.
 5. Open the chat room — your cards are already in context, shown in a strip at the top.
 6. **Chat mode**: type a question, or tap the **mic** to dictate it. **Speak mode** (toggle at the top): tap the orb, speak, and your question sends itself.

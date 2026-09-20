@@ -4,11 +4,11 @@
 
    The ceremony, in order:
      1. gather     the deck draws itself into one centred stack
-     2. shuffle    the stack cuts left, cuts right, settles  (shuffle SFX)
-     3. riffle     the deck splits in two and interleaves back together
-     4. pull       the deck leaves the stage; one card per requested pull
+     2. shuffle    riffle x2 — the deck splits in two and interleaves back
+                   together (shuffle SFX). This is the restored v1 animation.
+     3. pull       the deck leaves the stage; one card per requested pull
                    falls vertically into place
-     5. reveal     each landed card turns over and shows its face
+     4. reveal     each landed card turns over and shows its face
 
    There is deliberately NO fan-out / spread. The deck never opens into an
    arc: that step was the widest thing on the stage and the only one whose
@@ -118,17 +118,12 @@
     `translate3d(${x}px, ${y}px, ${z}px) ` +
     `rotateZ(${rot}deg) rotateY(${flip}deg) scale(${scale})`;
 
-  const CARD_W = 160;   // .card width in style.css  — update both together
-  const CARD_H = 250;   // .card height in style.css — update both together
+  const CARD_W = 160;   // .card width in style.css — update both together
 
   // The usable width of the stage, in px. Everything horizontal is measured
   // against this so nothing can ever spill past the stage and open up a
   // sideways scroll on a phone.
   const stageW = () => stage.clientWidth || window.innerWidth * 0.9;
-
-  // The widest thing a whole stack of cards can be slid sideways and still sit
-  // entirely inside the stage (used by shuffle + riffle).
-  const stackShift = () => Math.max(0, stageW() / 2 - CARD_W / 2 - 6);
 
   // How far apart the drawn cards sit, for a given pull size. Also kept inside
   // the stage so a 3-card spread cannot reach past the edge on a narrow phone.
@@ -197,46 +192,30 @@
   };
 
   /* ── 2. Shuffle ────────────────────────────────────────────────────────
-     The whole stack moves as one deck: cut left, cut right, settle centre.
-     The cut distance is derived from the stage so the deck can never swing
-     past the stage edge and open a sideways scroll on a phone. */
+     The shuffle animation: the deck splits into two halves that tilt apart,
+     then interleaves back together card by card. This is version 1's riffle,
+     restored exactly — it is the ONLY sideways motion in the whole reading.
+
+     The previous attempt at this step slid the entire stack left, then right,
+     then back to centre. That sways the whole stack as one slab, which reads
+     as the cards rattling from side to side rather than being shuffled, so it
+     has been removed. */
+  const SHUFFLE_SPLIT = 100;   // px each half slides out sideways (v1's value)
+
   const shuffle = async (cards) => {
     play(sfxShuffle);
-    const shift = stackShift();
-    const beats = [
-      { x:  shift, rot:  3, ms: 360 },
-      { x: -shift, rot: -3, ms: 360 },
-      { x: 0,      rot:  0, ms: 420 },
-    ];
-    for (const b of beats) {
-      cards.forEach((c, i) => {
-        c.style.transition =
-          `transform ${b.ms / 1000}s cubic-bezier(.6,.05,.3,1)`;
-        c.style.transform = xf({ x: b.x, y: -i * 0.8, z: i * 0.4, rot: b.rot });
-      });
-      await pause(b.ms);
-    }
-  };
+    const half = Math.ceil(cards.length / 2);
+    cards.forEach((c, i) => {
+      const side = i < half ? -1 : 1;
+      const k = i < half ? i : i - half;
+      c.style.transition = 'transform .45s cubic-bezier(.7,.1,.3,1)';
+      c.style.transform =
+        xf({ x: side * SHUFFLE_SPLIT, y: -k * 0.8, z: k * 0.4, rot: side * 4 });
+    });
+    await pause(460);
 
-  /* ── 3. Riffle ─────────────────────────────────────────────────────────
-     Split into two halves, then interleave them back card by card. */
-  const riffle = async (cards) => {
-    play(sfxShuffle);
-    const half  = Math.ceil(cards.length / 2);
     const left  = cards.slice(0, half);
     const right = cards.slice(half);
-    const shift = stackShift();
-
-    cards.forEach((c, i) => {
-      const isLeft = i < half;
-      const k = isLeft ? i : i - half;
-      const side = isLeft ? -1 : 1;
-      c.style.transition = 'transform .38s cubic-bezier(.6,.05,.3,1)';
-      c.style.transform =
-        xf({ x: side * shift, y: -k * 0.8, z: k * 0.4, rot: side * 4 });
-    });
-    await pause(400);
-
     const merged = [];
     for (let i = 0; i < half; i++) {
       if (left[i])  merged.push(left[i]);
@@ -245,15 +224,15 @@
     for (let i = 0; i < merged.length; i++) {
       const c = merged[i];
       c.style.zIndex = String(10 + i);
-      c.style.transition = 'transform .26s cubic-bezier(.6,.05,.3,1)';
+      c.style.transition = 'transform .3s cubic-bezier(.7,.1,.3,1)';
       c.style.transform = stackAt(i);
-      await pause(34);
+      await pause(30);
     }
-    await pause(300);
+    await pause(250);
     return merged;
   };
 
-  /* ── 4. The deck leaves ────────────────────────────────────────────────
+  /* ── 3. The deck leaves ────────────────────────────────────────────────
      The deck is ceremony, never a source — nothing is ever picked OUT of it,
      so no card can ever be seen sitting behind another while the pull
      happens. It leaves completely: a 160ms fade with NO transform (so nothing
@@ -270,7 +249,7 @@
     await pause(60);
   };
 
-  /* ── 5. Pull — the drop in ─────────────────────────────────────────────
+  /* ── 4. Pull — the drop in ─────────────────────────────────────────────
      One card per requested pull falls vertically into its position.
 
      They already sit at their final x, so the motion is a pure vertical drop.
@@ -365,7 +344,7 @@
     });
   };
 
-  /* ── 6. Reveal ─────────────────────────────────────────────────────────
+  /* ── 5. Reveal ─────────────────────────────────────────────────────────
      Turn each landed card over and show its face, then fill the
      interpretation panel and hand the reading to the chat companion. */
   const drawPool = (count) => {
@@ -501,7 +480,7 @@
   };
 
   /* ── The reading itself ────────────────────────────────────────────────
-     gather → shuffle → riffle → the deck leaves → pull → reveal */
+     gather → shuffle (riffle ×2) → the deck leaves → pull → reveal */
   const runReading = async () => {
     const count = drawCount;
 
@@ -524,15 +503,14 @@
     setCaption('Gathering the deck…');
     await gather(stack);
 
-    // 2. SHUFFLE
+    // 2. SHUFFLE — twice, exactly as version 1 did.
     setCaption('Shuffling the deck…');
-    await shuffle(stack);
+    stack = await shuffle(stack);
 
-    // 3. RIFFLE
     setCaption('Attuning to your energy…');
-    stack = await riffle(stack);
+    stack = await shuffle(stack);
 
-    // 4. THE DECK LEAVES — it was ceremony, never a source.
+    // 3. THE DECK LEAVES — it was ceremony, never a source.
     setCaption('The deck releases its cards…');
     await discardDeck();
 
