@@ -334,17 +334,17 @@ h1{
 /* Deck stage */
 .deck-stage{
   position: relative;
-  /* Cards are 250px tall and vertically centred, so the box needs enough
-     head-room for the fan arc AND for the vertical drop-in: a drawn card
-     starts near the top edge of this box and falls into place.
-     380px leaves 65px above a centred card, 40px below a resting drawn card,
-     and gives the visible drop ~83px to travel. */
-  width: min(760px, 90vw); height: 380px;
+  /* Cards are 250px tall and vertically centred. The box needs enough
+     head-room for the vertical drop-in: a pulled card starts near the top
+     edge of this box and falls into place.
+     360px leaves 55px above a centred card, 30px below a resting drawn card,
+     and gives the visible drop ~73px to travel. (There is no fan any more, so
+     no extra arc head-room is needed.) */
+  width: min(760px, 90vw); height: 360px;
   perspective: 1600px;
-  /* Deliberately NOT clipped — the drop-in is kept inside the box instead,
-     so the fan's outer cards can still arc past the stage edges into the
-     empty section padding. Clipping a perspective/3D stage is exactly the
-     kind of thing that renders differently on phone GPUs. */
+  /* Deliberately NOT clipped — the drop is kept inside the box by geometry
+     instead. Clipping a perspective/3D stage is exactly the kind of thing
+     that renders differently on phone GPUs. */
 }
 /* Idle state — the pre-fanned deck is clickable and hoverable */
 .deck-stage.idle{ cursor: pointer; }

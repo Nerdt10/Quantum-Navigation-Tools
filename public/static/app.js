@@ -6,10 +6,14 @@
      1. gather     the deck draws itself into one centred stack
      2. shuffle    the stack cuts left, cuts right, settles  (shuffle SFX)
      3. riffle     the deck splits in two and interleaves back together
-     4. fan out    the deck opens into a wide arc
-     5. clear fan  the fan is removed completely, leaving an empty stage
-     6. drop in    one card per requested pull falls vertically into place
-     7. reveal     each landed card turns over and shows its face
+     4. pull       the deck leaves the stage; one card per requested pull
+                   falls vertically into place
+     5. reveal     each landed card turns over and shows its face
+
+   There is deliberately NO fan-out / spread. The deck never opens into an
+   arc: that step was the widest thing on the stage and the only one whose
+   cards drifted toward the stage's edge, so removing it removes the whole
+   class of sideways-panning glitch on a phone.
 
    Every step writes an inline `transform` and is stepped with await/timers.
    No animation library, no LLM — the deck is static data.
@@ -116,7 +120,6 @@
 
   const CARD_W = 160;   // .card width in style.css  — update both together
   const CARD_H = 250;   // .card height in style.css — update both together
-  const ARC_ROT = 3;    // deg per card off centre, for the fan
 
   // The usable width of the stage, in px. Everything horizontal is measured
   // against this so nothing can ever spill past the stage and open up a
@@ -126,23 +129,6 @@
   // The widest thing a whole stack of cards can be slid sideways and still sit
   // entirely inside the stage (used by shuffle + riffle).
   const stackShift = () => Math.max(0, stageW() / 2 - CARD_W / 2 - 6);
-
-  /* Fan geometry, derived from the stage rather than the viewport.
-     A rotated card's axis-aligned bounding box is WIDER than the card:
-        bboxW = w·cos θ + h·sin θ
-     At the fan's outermost rotation (13.5° for 10 cards) a 160×250 card has a
-     214px bbox — which is why a viewport-sized fan used to hang 19px off the
-     edge of a 390px phone and make the whole page pan sideways. Sizing the
-     fan to `stageW − bboxW` keeps the outermost card's bbox exactly inside
-     the stage at every viewport. */
-  const fanGeometry = (n) => {
-    const maxRot = ((n - 1) / 2) * ARC_ROT;
-    const rad = (maxRot * Math.PI) / 180;
-    const bboxW = CARD_W * Math.cos(rad) + CARD_H * Math.sin(rad);
-    const total = Math.max(0, Math.min(520, stageW() - bboxW));
-    const stepX = n > 1 ? total / (n - 1) : 0;
-    return { startX: -total / 2, stepX, ARC_ROT, ARC_LIFT: 6 };
-  };
 
   // How far apart the drawn cards sit, for a given pull size. Also kept inside
   // the stage so a 3-card spread cannot reach past the edge on a narrow phone.
@@ -267,34 +253,13 @@
     return merged;
   };
 
-  /* ── 4. Fan out ────────────────────────────────────────────────────────
-     Open the deck into a wide U-shaped arc, like holding a hand of cards.
-     Sized by fanGeometry() so the outermost card's rotated bounding box is
-     still inside the stage — no sideways scroll on a phone. */
-  const fan = async (cards) => {
-    const n = cards.length;
-    const { startX, stepX, ARC_ROT: ROT, ARC_LIFT: LIFT } = fanGeometry(n);
-
-    for (let i = 0; i < n; i++) {
-      const c = cards[i];
-      const k = i - (n - 1) / 2;
-      c.style.zIndex = String(30 + i);
-      c.style.transition = 'transform .62s cubic-bezier(.5,.05,.3,1)';
-      c.style.transform = xf({
-        x: startX + i * stepX,
-        y: Math.abs(k) * LIFT,
-        rot: k * ROT,
-      });
-      await pause(42);
-    }
-    await pause(560);
-  };
-
-  /* ── 5. Clear the fan ──────────────────────────────────────────────────
-     The fan is ceremony, never a source. It leaves completely: a 160ms fade
-     with NO transform (so nothing can travel outside the stage), then the
-     stage is emptied and the DOM nodes are gone. */
-  const clearFan = async () => {
+  /* ── 4. The deck leaves ────────────────────────────────────────────────
+     The deck is ceremony, never a source — nothing is ever picked OUT of it,
+     so no card can ever be seen sitting behind another while the pull
+     happens. It leaves completely: a 160ms fade with NO transform (so nothing
+     can travel outside the stage), then the stage is emptied and the DOM
+     nodes are gone. */
+  const discardDeck = async () => {
     const cards = Array.from(stage.querySelectorAll('.card'));
     cards.forEach((c) => {
       c.style.transition = 'opacity .16s linear';
@@ -305,8 +270,8 @@
     await pause(60);
   };
 
-  /* ── 6. Drop in ────────────────────────────────────────────────────────
-     One card per requested pull falls vertically into its spread position.
+  /* ── 5. Pull — the drop in ─────────────────────────────────────────────
+     One card per requested pull falls vertically into its position.
 
      They already sit at their final x, so the motion is a pure vertical drop.
 
@@ -321,9 +286,8 @@
 
      So the topmost a card ever gets while resting is 55px. Falling from
      -48px lands the card at 7px — 7px of head-room clear of the stage's top
-     edge. NOTHING renders outside the box: the stage is no longer clipped,
-     so the fan above can still arc past the edges into the section padding
-     (where there is nothing to collide with), but the drop is contained. */
+     edge, so the entire fall happens INSIDE the stage box. (The stage is not
+     clipped, so this is a real geometric guarantee rather than a mask.) */
   const DROP_FROM = -48;   // px above the resting position (top edge - 7px)
 
   const dropIn = async (count) => {
@@ -401,7 +365,7 @@
     });
   };
 
-  /* ── 7. Reveal ─────────────────────────────────────────────────────────
+  /* ── 6. Reveal ─────────────────────────────────────────────────────────
      Turn each landed card over and show its face, then fill the
      interpretation panel and hand the reading to the chat companion. */
   const drawPool = (count) => {
@@ -503,13 +467,11 @@
     }, 250);
   };
 
-  /* ── Idle fan ──────────────────────────────────────────────────────────
-     The deck sits ready before anything starts. It snaps into the arc with a
-     gentle staggered entrance, sized by the same fanGeometry() as the
-     ceremony — so its outermost card never hangs off the edge of the stage
-     (an 19px overhang on a 390px phone is enough to make the whole page pan
-     sideways, which reads as a glitch before a single card is drawn). */
-  const setupIdleFan = async () => {
+  /* ── Idle deck ─────────────────────────────────────────────────────────
+     Before anything starts the deck sits ready as a single tidy stack —
+     face down, clickable and keyboard-reachable. A gentle staggered entrance
+     lifts the cards into place. */
+  const setupIdleDeck = async () => {
     clearStage();
     stage.classList.add('idle');
     actions.classList.remove('show');
@@ -521,36 +483,25 @@
     const cards = Array.from({ length: STACK_SIZE }, () => makeCard());
     stage.append(...cards);
 
-    const n = cards.length;
-    const { startX, stepX, ARC_ROT: ROT, ARC_LIFT: LIFT } = fanGeometry(n);
-    const at = (i, drop) => {
-      const k = i - (n - 1) / 2;
-      return xf({
-        x: startX + i * stepX,
-        y: Math.abs(k) * LIFT + drop,
-        rot: k * ROT,
-      });
-    };
-
     cards.forEach((c, i) => {
-      c.style.zIndex = String(30 + i);
+      c.style.zIndex = String(10 + i);
       c.style.transition =
         'transform .55s cubic-bezier(.5,.05,.3,1), opacity .4s ease';
       c.style.opacity = '0';
-      c.style.transform = at(i, 26);
+      c.style.transform = xf({ y: -i * 0.8 + 22, z: i * 0.4 });
     });
     await pause(60);
     cards.forEach((c, i) => {
       setTimeout(() => {
         c.style.opacity = '1';
-        c.style.transform = at(i, 0);
-      }, REDUCED ? 0 : i * 50);
+        c.style.transform = stackAt(i);
+      }, REDUCED ? 0 : i * 45);
     });
     await pause(560);
   };
 
   /* ── The reading itself ────────────────────────────────────────────────
-     gather → shuffle → riffle → fan → clear fan → drop in → reveal */
+     gather → shuffle → riffle → the deck leaves → pull → reveal */
   const runReading = async () => {
     const count = drawCount;
 
@@ -581,15 +532,11 @@
     setCaption('Attuning to your energy…');
     stack = await riffle(stack);
 
-    // 4. FAN OUT
-    setCaption('Spreading the deck…');
-    await fan(stack);
-
-    // 5. CLEAR THE FAN — the deck releases its cards, then leaves.
+    // 4. THE DECK LEAVES — it was ceremony, never a source.
     setCaption('The deck releases its cards…');
-    await clearFan();
+    await discardDeck();
 
-    // 6. DROP IN
+    // 5. PULL — the requested number fall in.
     setCaption(
       count === 1 ? 'One card emerges…'
       : count === 2 ? 'Two cards emerge…'
@@ -678,12 +625,12 @@
   if (againBtn) {
     againBtn.addEventListener('click', async () => {
       if (running) return;
-      await setupIdleFan();
+      await setupIdleDeck();
       await pause(360);
       triggerReading();
     });
   }
 
   /* ── Mount: the reading section is never empty ─────────────────────── */
-  setupIdleFan();
+  setupIdleDeck();
 })();
