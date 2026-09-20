@@ -14,9 +14,10 @@ The landing and reading experience was recreated from the Genspark Design handof
 ## Features (completed)
 
 ### Hero — "the product shot"
-- Full-viewport flex layout: copy on the left (max-width 480px), the **product shot** on the right — the printed box next to the standing guide card on its wooden stand (`product-hero.webp`, 870×551).
+- Full-viewport flex layout: copy on the left (max-width 480px), the **product shot** on the right — the printed box next to the standing guide card on its wooden stand (`product-hero.webp`, 706×531).
 - The shot is sized `clamp(340px, 44vw, 620px)` so on wide screens it reads as a peer to the 480px copy column rather than a small inset; on phones it drops to `min(84vw, 380px)`. Measured across 8 viewports from 390px to 1680px: zero horizontal overflow at every width.
-- Background removed via a fitted quadratic backdrop model (the source is a graded near-white field, not flat white) — see `product-hero.png` for the PNG fallback carried by the `<picture>` element.
+- Background removed by modelling the backdrop (a fitted quadratic surface — the source is a graded near-white field, not flat white) and taking alpha from the **object mask** rather than from residual luminance. The distinction matters: the photo's own cast shadow sits at residual 5–79 while the objects sit above 90, so a luminance ramp renders that shadow at full opacity and fades it over ~30px, leaving a grey halo under the box and stand. Masking keeps alpha binary across the object and lets the CSS `drop-shadow` supply the ground shadow. Haze band (alpha 0.02–0.47) went from 6,006px to 60px. Mask cross-checked against an independent colour-based mask: IoU 0.907, 8px disagreement.
+- The crop is the object's own bounding box, so the shot is no longer padded with empty shadow margin — the product now fills its column. See `product-hero.png` for the PNG fallback carried by the `<picture>` element.
 - Gold-hairline eyebrow ("✦ Quantum Navigational Tools"), the headline **"Quantum Developmental Tools"**, a gold "FOUNDER DR. TASHEMA" byline, subtitle, and the pill CTA "Get a Free Card Reading ↓".
 - Orchestrated rise-in entrance (0.1s → 1.4s) and a bobbing "SCROLL TO RECEIVE" hint.
 - Fixed ivory watercolor atmosphere (`hero-ivory.jpg`) with a soft cream wash overlay.
