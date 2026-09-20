@@ -111,13 +111,17 @@ h1{
   opacity: 0; animation: rise 1.2s ease .3s forwards;
   text-wrap: balance;
 }
-h1 .welcome{
+/* Founder byline beneath the headline */
+.founder{
   display: block;
-  font-size: .32em;
-  font-weight: 300;
-  letter-spacing: .05em;
-  color: var(--ink-soft);
-  margin-bottom: 20px;
+  margin: 18px 0 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0; animation: rise 1.2s ease .42s forwards;
 }
 
 .sub{
@@ -499,7 +503,7 @@ h1 .welcome{
 
 /* Peek affordance hint — shown only when the drawn cards actually overlap */
 .peek-hint{
-  margin-top: 24px;
+  margin-top: 14px;
   font-family: var(--font-sans);
   font-size: 10.5px;
   letter-spacing: .16em;
@@ -528,39 +532,20 @@ h1 .welcome{
 }
 .card.flipped .position-label{ opacity: 1; }
 
-.deck-hint{
-  margin-top: 32px;
-  font-family: var(--font-sans);
-  font-size: 11px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  opacity: 0;
-  transition: opacity .5s;
-}
-.deck-hint.show{
-  opacity: 1;
-  animation: hint-pulse 3s ease-in-out infinite 1s;
-}
-@keyframes hint-pulse{
-  0%,100% { opacity: .55; }
-  50%     { opacity: 1; }
-}
-
 .reading-caption{
-  margin-top: 32px;
+  margin-top: 18px;
   font-family: var(--font-display);
   font-weight: 400;
   font-size: clamp(16px, 1.4vw, 19px);
   color: var(--ink-soft);
   max-width: 32ch;
   line-height: 1.6;
-  min-height: 2.4em;
+  min-height: 1.6em;
   transition: opacity .5s;
 }
 /* Interpretation panel — the three revealed meanings, side by side */
 .reading-meanings{
-  margin-top: 60px;
+  margin-top: 34px;
   max-width: 1000px; width: 100%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);

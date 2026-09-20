@@ -71,7 +71,6 @@
   };
 
   const stage      = document.getElementById('deckStage');
-  const hint       = document.getElementById('deckHint');
   const cta        = document.getElementById('ctaBtn');
   const caption    = document.getElementById('readingCaption');
   const meanings   = document.getElementById('readingMeanings');
@@ -377,7 +376,6 @@
   const setupIdleFan = async () => {
     clearStage();
     stage.classList.add('idle');
-    hint.classList.add('show');
     actions.classList.remove('show');
     meanings.classList.remove('show');
     meanings.innerHTML = '';
@@ -423,7 +421,6 @@
 
     // Leave idle state
     stage.classList.remove('idle');
-    hint.classList.remove('show');
     actions.classList.remove('show');
     meanings.classList.remove('show');
     meanings.innerHTML = '';

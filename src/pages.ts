@@ -40,11 +40,11 @@ ${head({
   <!-- HERO -->
   <section class="hero" id="hero">
     <div class="hero-copy">
-      <div class="eyebrow">✦ Quantum Developmental Tools</div>
+      <div class="eyebrow">✦ Quantum Navigational Tools</div>
       <h1>
-        <span class="welcome">Welcome to</span>
-        Dr. Tashema's Quantum Developmental Tools
+        Quantum Developmental Tools
       </h1>
+      <div class="founder">Founder Dr. Tashema</div>
       <p class="sub">
         A quiet space where quantum insight meets soul remembrance —
         practices, readings, and remembrances for those learning to move
@@ -81,7 +81,6 @@ ${head({
     </div>
 
     <div class="deck-stage" id="deckStage"></div>
-    <div class="deck-hint" id="deckHint">Choose how many to pull — the deck is ready</div>
 
     <div class="reading-caption" id="readingCaption"></div>
 
