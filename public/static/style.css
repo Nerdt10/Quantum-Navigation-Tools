@@ -186,6 +186,12 @@ h1{
      smaller than the 480px copy block beside it. This scales it up on wide
      screens while staying inside the flex row's spare space at mid widths. */
   width: clamp(340px, 44vw, 620px);
+  /* Pulled slightly toward the copy column so the hero reads as one composition
+     rather than two blocks either side of a wide gutter. Done with `left` (not a
+     transform) because the entrance animation already owns `transform`.
+     The offset is a fraction of the viewport so it can never close the flex gap
+     entirely: at 900px it moves 18px of the 45px gutter, at 1440px 29px of 72px. */
+  left: clamp(-36px, -2vw, 0px);
   display:flex; align-items:center; justify-content:center;
   opacity: 0; animation: rise 1.4s ease .9s forwards;
 }
