@@ -229,14 +229,18 @@
     });
     await wait(550);
 
-    // The fan disappears and the picks travel forward together — at the same
-    // moment, so the fanned cards are never seen behind the drawn ones. The
-    // fan clears faster than the picks travel (0.28s vs 0.8s), so nothing is
-    // left sitting behind them mid-flight.
+    // The fan leaves the stage the instant the chosen cards are brought
+    // forward. This is an instant CUT, not a fade: a fade left the fan cards
+    // faintly readable for ~0.3s while the picks were already gliding forward,
+    // so you could still see the fan behind them. Cutting with no transition
+    // guarantees nothing is ever visible behind the cards being drawn.
     rest.forEach(c => {
-      c.style.transition = 'opacity .28s ease';
+      c.style.transition = 'none';
       c.classList.add('faded');
     });
+    // Force the browser to commit the instant change before the travel
+    // animation starts, so the two can never overlap on screen.
+    void stage.offsetWidth;
 
     const spread = cardSpread(count);
     const start  = -(count - 1) / 2;
